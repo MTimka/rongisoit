@@ -11,6 +11,7 @@ public class GreeterService : Greeter.GreeterBase
     private readonly ILogger<GreeterService> _logger;
 
     public static Dictionary<string, LatLng> m_userLocations = new Dictionary<string, LatLng>();
+    public static Dictionary<string, double> m_userRadius = new Dictionary<string, double>();
     public static Dictionary<string, AutoResetEvent> m_userEvents1 = new Dictionary<string, AutoResetEvent>();
     public static Dictionary<string, AutoResetEvent> m_userEvents2 = new Dictionary<string, AutoResetEvent>();
     public static Dictionary<string, LatLng> m_trainLocations = new Dictionary<string, LatLng>();
@@ -65,7 +66,13 @@ public class GreeterService : Greeter.GreeterBase
             {
                 m_userLocations[key].DistanceFromClosestTrain = dist;
 
-                if (m_userLocations[key].DistanceFromClosestTrain < 0.010) // in km
+                var radiusToCheck = 0.010; // in km
+                if (m_userRadius.ContainsKey(key))
+                {
+                    radiusToCheck = m_userRadius[key] / 1000.0; // convert meters to km
+                }
+                
+                if (m_userLocations[key].DistanceFromClosestTrain < radiusToCheck) // in km
                 {
                     m_userEvents1[key].Set();
                 }
@@ -111,11 +118,23 @@ public class GreeterService : Greeter.GreeterBase
         });
     }
 
-public override Task<Response> UpdateUserLocation(UserLocation request, ServerCallContext context)
+    public override Task<Response> UpdateUserLocation(UserLocation request, ServerCallContext context)
     {
         Console.WriteLine($"UpdateUserLocation [] {request.Id} {request.Latitude} {request.Longitude}");
         
         m_userLocations[request.Id] = new LatLng { Latitude = request.Latitude, Longitude = request.Longitude };
+
+        return Task.FromResult(new Response
+        {
+            Code = "OK"
+        });
+    }
+    
+    public override Task<Response> UpdateUserImpactRadius(UserImpactRadiusRequest request, ServerCallContext context)
+    {
+        Console.WriteLine($"UpdateUserImpactRadius [] {request.Id} {request.Radius}");
+        
+        m_userRadius[request.Id] = request.Radius;
 
         return Task.FromResult(new Response
         {
@@ -165,6 +184,7 @@ public override Task<Response> UpdateUserLocation(UserLocation request, ServerCa
         Console.WriteLine($"SubscribeForImpact [] {request.Id} ended");
 
     }
+    
     
     public override async Task SubscribeForTrainLocationUpdates(SubscribeRequest request, IServerStreamWriter<TrainLocationUpdatesResponse> responseStream, ServerCallContext context)
     {

@@ -18,7 +18,9 @@ service Greeter {
   rpc SubscribeForImpact(SubscribeRequest) returns (stream Response);
   rpc UpdateUserLocation(UserLocation) returns (Response);
   rpc SubscribeForTrainLocationUpdates(SubscribeRequest) returns (stream TrainLocationUpdatesResponse);
-  
+  rpc UpdateUserImpactRadius(UserImpactRadiusRequest) returns (Response);
+
+
   // for data collecting
   rpc SubscribeForDataCollector(SubscribeRequest) returns (stream DataResponse);
 
@@ -75,4 +77,9 @@ message RemoveActiveTrainRequest {
 
 message DataResponse {
   string json = 1;
+}
+
+message UserImpactRadiusRequest {
+  string id = 1;
+  double radius = 2;
 }
