@@ -1,6 +1,6 @@
 using System.Net;
 using gRPC_Service.Services;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
+// using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,12 +10,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddGrpc();
 
-builder.WebHost.ConfigureKestrel(options =>
-{
-    // options.Listen(IPAddress.Parse("192.168.8.100"), 5001, o => o.Protocols = HttpProtocols.Http2);
-    options.Listen(IPAddress.Parse("13.50.101.103"), 5001, o => o.Protocols = HttpProtocols.Http2);
-
-});
+// builder.WebHost.ConfigureKestrel(options =>
+// {
+//     // options.Listen(IPAddress.Parse("192.168.8.100"), 5001, o => o.Protocols = HttpProtocols.Http2);
+//     options.Listen(IPAddress.Parse("13.50.101.103"), 5001, o => o.Protocols = HttpProtocols.Http2);
+//
+// });
 
 builder.Services.AddCors(o => o.AddPolicy("MyPolicy", builder => {
     builder
