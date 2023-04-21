@@ -6,7 +6,7 @@ using TrainSimulator;
 
 Console.WriteLine("Hello, World!");
 
-using var channel = GrpcChannel.ForAddress("http://192.168.8.100:5001");
+using var channel = GrpcChannel.ForAddress("http://13.50.101.103:5001");
 var client = new Greeter.GreeterClient(channel);
 
 // var startingPos = new LatLng { Latitude = 50.0, Longitude = 50.0 };
@@ -47,7 +47,7 @@ for (var pos = startingPos; ; pos = MakeStep(pos))
     {
         TrainId = "train1", 
         Latitude = pos.Latitude,
-        Longitude = pos.Longitude
+        Longitude = pos.Longitude,
     });
     
     Console.WriteLine("reply: " + reply2.Code);

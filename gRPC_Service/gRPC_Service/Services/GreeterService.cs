@@ -203,10 +203,10 @@ public override Task<Response> UpdateUserLocation(UserLocation request, ServerCa
             for (var i = 0; i < keyList.Count; i++)
             {
                 var key = keyList[i];
-                if (m_trainLocations.ContainsKey(key))
+                if (m_userActiveTrains.ContainsKey(key))
                 {
                     lastTrainIds.Add(key);
-                    var it = m_trainLocations[key];
+                    var it = m_userActiveTrains[key];
                 
                     await responseStream.WriteAsync(new TrainLocationUpdatesResponse
                     {
