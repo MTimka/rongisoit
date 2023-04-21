@@ -199,14 +199,14 @@ public override Task<Response> UpdateUserLocation(UserLocation request, ServerCa
 
             // and set active locations and store cache to compare for orphaned
             var lastTrainIds = new List<string>();
-            var keyList = m_userActiveTrains.Keys.ToList(); // to be thread safe
+            var keyList = m_trainLocations.Keys.ToList(); // to be thread safe
             for (var i = 0; i < keyList.Count; i++)
             {
                 var key = keyList[i];
-                if (m_userActiveTrains.ContainsKey(key))
+                if (m_trainLocations.ContainsKey(key))
                 {
                     lastTrainIds.Add(key);
-                    var it = m_userActiveTrains[key];
+                    var it = m_trainLocations[key];
                 
                     await responseStream.WriteAsync(new TrainLocationUpdatesResponse
                     {
