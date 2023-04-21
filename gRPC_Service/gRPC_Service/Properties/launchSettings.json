@@ -1,0 +1,13 @@
+﻿{
+  "profiles": {
+    "gRPC_Service": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "http://13.50.101.103:5001;https://13.50.101.103:7199",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

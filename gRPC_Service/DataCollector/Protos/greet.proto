@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+option csharp_namespace = "DataCollector";
+
+package greet;
+
+// The greeting service definition.
+service Greeter {
+  // Sends a greeting
+  rpc SayHello (HelloRequest) returns (HelloReply);
+
+  // for client
+  rpc SubscribeForDataCollector(SubscribeRequest) returns (stream DataResponse);
+
+}
+
+// The request message containing the user's name.
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greetings.
+message HelloReply {
+  string message = 1;
+}
+
+message SubscribeRequest {
+  string id = 1;
+}
+
+message DataResponse {
+  string json = 1;
+}
