@@ -83,10 +83,6 @@ public class GreeterService : Greeter.GreeterBase
         }
 
         m_trainLocations[request.TrainId] = new LatLng { Latitude = request.Latitude, Longitude = request.Longitude };
-        
-        // tell users to update locations
-        foreach (var it in m_userEvents2)
-        { it.Value.Set(); }
     }
     
     public override Task<Response> UpdateTrainLocation(TrainLocation request, ServerCallContext context)
@@ -94,6 +90,10 @@ public class GreeterService : Greeter.GreeterBase
         Console.WriteLine($"UpdateTrainLocation [] {request.Latitude} {request.Longitude}");
         
         UpdateTrainLocationRaw(request);
+        
+        // tell users to update locations
+        foreach (var it in m_userEvents2)
+        { it.Value.Set(); }
 
         return Task.FromResult(new Response
         {
@@ -220,6 +220,7 @@ public class GreeterService : Greeter.GreeterBase
             // and set active locations and store cache to compare for orphaned
             var lastTrainIds = new List<string>();
             var keyList = m_trainLocations.Keys.ToList(); // to be thread safe
+            
             for (var i = 0; i < keyList.Count; i++)
             {
                 var key = keyList[i];
@@ -339,6 +340,10 @@ public class GreeterService : Greeter.GreeterBase
                             Longitude = longitude
                         });
                     }
+                    
+                    // tell users to update locations
+                    foreach (var it in m_userEvents2)
+                    { it.Value.Set(); }
                 
                     // write to users cache
                     foreach (var key in m_userCache.Keys)
