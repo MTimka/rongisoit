@@ -5,7 +5,8 @@ using Grpc.Net.Client;
 
 Console.WriteLine("Hello, World!");
 
-using var channnel = GrpcChannel.ForAddress("http://192.168.8.100:5001");
+using var channnel = GrpcChannel.ForAddress("http://13.50.101.103:5001");
+// using var channnel = GrpcChannel.ForAddress("http://192.168.8.100:5001");
 var client = new Greeter.GreeterClient(channnel);
 var reply = client.SayHello(new HelloRequest { Name = "mambo" });
 Console.WriteLine("reply: " + reply.Message);
