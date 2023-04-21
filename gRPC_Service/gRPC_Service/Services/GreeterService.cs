@@ -160,7 +160,7 @@ public override Task<Response> UpdateUserLocation(UserLocation request, ServerCa
             Console.WriteLine($"SubscribeForImpact [] no key for {request.Id} ");
         }
         
-        m_userEvents1.Remove(request.Id);
+        // m_userEvents1.Remove(request.Id);
 
         Console.WriteLine($"SubscribeForImpact [] {request.Id} ended");
 
@@ -222,8 +222,8 @@ public override Task<Response> UpdateUserLocation(UserLocation request, ServerCa
 
         }
 
-        m_userEvents2.Remove(request.Id);
-        m_userActiveTrains.Remove(request.Id);
+        // m_userEvents2.Remove(request.Id);
+        // m_userActiveTrains.Remove(request.Id);
         
         Console.WriteLine($"SubscribeForTrainLocationUpdates [] {request.Id} ended");
 
