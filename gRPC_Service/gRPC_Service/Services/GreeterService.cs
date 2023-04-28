@@ -358,40 +358,46 @@ public class GreeterService : Greeter.GreeterBase
 
                         if (m_trainLocationsCache.ContainsKey(trainId))
                         {
-                            if (m_trainLocationsCache[trainId].Count > 5)
+                            if (m_trainLocationsCache[trainId].Count > 6)
                             {
                                 m_trainLocationsCache[trainId].RemoveAt(0);
                             }
                             m_trainLocationsCache[trainId].Add(tLoc);
                             
                             // try to predict 
-                            var tLocsMapped = m_trainLocationsCache[trainId]
-                                .Select(x => Tuple.Create(x.Latitude, x.Longitude, x.Timestamp)).ToList();
-                            
-                            // Get the time zone info for Estonia
-                            TimeZoneInfo estoniaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. Europe Standard Time");
-
-                            // Get the current date and time in the Estonian time zone
-                            DateTimeOffset estoniaTime = TimeZoneInfo.ConvertTime(DateTimeOffset.Now, estoniaTimeZone);
-
-                            // Convert DateTimeOffset to Unix timestamp
-                            long ee_unixTimestamp = estoniaTime.ToUnixTimeMilliseconds();
-                            double ee_timestamp = ee_unixTimestamp / 1000.0;
-
-                            var lpm = new LocationPredictionModel(tLocsMapped);
-                            var res = lpm.PredictNextLocation();
-                            // var res = TrainLocationPredictor.PredictTrainLocationAtTimestamp(tLocsMapped, ee_timestamp);
-                            
-                            var tLocU = new TrainLocation
+                            if (m_trainLocationsCache.Count > 4)
                             {
-                                TrainId = trainId + "_pres",
-                                Latitude = res.Item1,
-                                Longitude = res.Item2,
-                                Timestamp = ee_timestamp,
-                            };
-                            
+                                var tLocsMapped = m_trainLocationsCache[trainId]
+                                    .Select(x => Tuple.Create(x.Latitude, x.Longitude, x.Timestamp)).ToList();
+
+                                // Get the time zone info for Estonia
+                                TimeZoneInfo estoniaTimeZone =
+                                    TimeZoneInfo.FindSystemTimeZoneById("E. Europe Standard Time");
+
+                                // Get the current date and time in the Estonian time zone
+                                DateTimeOffset estoniaTime =
+                                    TimeZoneInfo.ConvertTime(DateTimeOffset.Now, estoniaTimeZone);
+
+                                // Convert DateTimeOffset to Unix timestamp
+                                long ee_unixTimestamp = estoniaTime.ToUnixTimeMilliseconds();
+                                double ee_timestamp = ee_unixTimestamp / 1000.0;
+
+                                var lpm = new LocationPredictionModel(tLocsMapped);
+                                var res = lpm.PredictNextLocation();
+                                // var res = TrainLocationPredictor.PredictTrainLocationAtTimestamp(tLocsMapped, ee_timestamp);
+
+                                var tLocU = new TrainLocation
+                                {
+                                    TrainId = trainId + "_pres",
+                                    Latitude = res.Item1,
+                                    Longitude = res.Item2,
+                                    Timestamp = ee_timestamp,
+                                };
+                                
+                                UpdateTrainLocationRaw(tLocU);
+                            }
+
                             UpdateTrainLocationRaw(tLoc);
-                            UpdateTrainLocationRaw(tLocU);
 
                         }
                         else
