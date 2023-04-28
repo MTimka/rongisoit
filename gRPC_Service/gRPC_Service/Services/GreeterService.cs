@@ -366,7 +366,7 @@ public class GreeterService : Greeter.GreeterBase
                             
                             // try to predict 
                             var tLocsMapped = m_trainLocationsCache[trainId]
-                                .Select(x => new[] {x.Latitude, x.Longitude, x.Timestamp}).ToArray();
+                                .Select(x => Tuple.Create(x.Latitude, x.Longitude, x.Timestamp)).ToList();
                             
                             // Get the time zone info for Estonia
                             TimeZoneInfo estoniaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. Europe Standard Time");
@@ -377,14 +377,16 @@ public class GreeterService : Greeter.GreeterBase
                             // Convert DateTimeOffset to Unix timestamp
                             long ee_unixTimestamp = estoniaTime.ToUnixTimeMilliseconds();
                             double ee_timestamp = ee_unixTimestamp / 1000.0;
-                            
-                            var res = TrainLocationPredictor.PredictTrainLocationAtTimestamp(tLocsMapped, ee_timestamp);
+
+                            var lpm = new LocationPredictionModel(tLocsMapped);
+                            var res = lpm.PredictNextLocation();
+                            // var res = TrainLocationPredictor.PredictTrainLocationAtTimestamp(tLocsMapped, ee_timestamp);
                             
                             var tLocU = new TrainLocation
                             {
                                 TrainId = trainId + "_pres",
-                                Latitude = res[0],
-                                Longitude = res[1],
+                                Latitude = res.Item1,
+                                Longitude = res.Item2,
                                 Timestamp = ee_timestamp,
                             };
                             
