@@ -1,6 +1,8 @@
+using System.Globalization;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using gRPC_Service;
+using gRPC_Service.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -20,6 +22,9 @@ public class GreeterService : Greeter.GreeterBase
     public static Dictionary<string, AutoResetEvent> m_userEvents3 = new Dictionary<string, AutoResetEvent>();
     public static Dictionary<string, List<string>> m_userCache = new Dictionary<string, List<string>>();
     public static int maxCacheSize = 100;
+    
+    public static Dictionary<string, List<TrainLocation>> m_trainLocationsCache = new Dictionary<string, List<TrainLocation>>();
+    
 
     public GreeterService(ILogger<GreeterService> logger)
     {
@@ -312,6 +317,8 @@ public class GreeterService : Greeter.GreeterBase
     {
         Console.WriteLine($"GetData [] begin");
 
+        var predictor = new TrainLocationPredictor();
+
         var interval = TimeSpan.FromMilliseconds(2000);
         while (true)
         {
@@ -332,13 +339,62 @@ public class GreeterService : Greeter.GreeterBase
                         var trainId = (string)jsonObject["reis"];
                         var latitude = (double)jsonObject["latitude"];
                         var longitude = (double)jsonObject["longitude"];
+                        var strDt = (string)jsonObject["asukoha_uuendus"];
                         
-                        UpdateTrainLocationRaw(new TrainLocation
+                        // Convert string to DateTimeOffset object
+                        DateTimeOffset dateTimeOffset = DateTimeOffset.ParseExact(strDt, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+
+                        // Convert DateTimeOffset to Unix timestamp
+                        long unixTimestamp = dateTimeOffset.ToUnixTimeMilliseconds();
+                        double timestamp = unixTimestamp / 1000.0;
+
+                        var tLoc = new TrainLocation
                         {
                             TrainId = trainId,
                             Latitude = latitude,
-                            Longitude = longitude
-                        });
+                            Longitude = longitude,
+                            Timestamp = timestamp,
+                        };
+
+                        if (m_trainLocationsCache.ContainsKey(trainId))
+                        {
+                            if (m_trainLocationsCache[trainId].Count > 5)
+                            {
+                                m_trainLocationsCache[trainId].RemoveAt(0);
+                            }
+                            m_trainLocationsCache[trainId].Add(tLoc);
+                            
+                            // try to predict 
+                            List<Tuple<double, double, double>> tLocsMapped = m_trainLocationsCache[trainId]
+                                .Select(x => Tuple.Create(x.Latitude, x.Longitude, x.Timestamp)).ToList();
+                            
+                            // Get the time zone info for Estonia
+                            TimeZoneInfo estoniaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. Europe Standard Time");
+
+                            // Get the current date and time in the Estonian time zone
+                            DateTimeOffset estoniaTime = TimeZoneInfo.ConvertTime(DateTimeOffset.Now, estoniaTimeZone);
+
+                            // Convert DateTimeOffset to Unix timestamp
+                            long ee_unixTimestamp = estoniaTime.ToUnixTimeMilliseconds();
+                            double ee_timestamp = ee_unixTimestamp / 1000.0;
+                            
+                            Tuple<double, double, double> res = predictor.PredictLocation(ee_timestamp, tLocsMapped);
+                            
+                            var tLocU = new TrainLocation
+                            {
+                                TrainId = trainId,
+                                Latitude = res.Item1,
+                                Longitude = res.Item2,
+                                Timestamp = res.Item3,
+                            };
+                            UpdateTrainLocationRaw(tLocU);
+
+                        }
+                        else
+                        {
+                            m_trainLocationsCache[trainId] = new List<TrainLocation>() { tLoc };
+                            UpdateTrainLocationRaw(tLoc);
+                        }
                     }
                     
                     // tell users to update locations
