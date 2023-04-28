@@ -382,11 +382,13 @@ public class GreeterService : Greeter.GreeterBase
                             
                             var tLocU = new TrainLocation
                             {
-                                TrainId = trainId,
+                                TrainId = trainId + "_pres",
                                 Latitude = res[0],
                                 Longitude = res[1],
                                 Timestamp = ee_timestamp,
                             };
+                            
+                            UpdateTrainLocationRaw(tLoc);
                             UpdateTrainLocationRaw(tLocU);
 
                         }
