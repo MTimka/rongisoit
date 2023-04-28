@@ -19,22 +19,51 @@ public class LocationPredictionModel
         _previousLocations = previousLocations;
     }
 
-    public (double, double) PredictNextLocation(double timestamp)
+    public (double, double) PredictNextLocation(double targetTimestamp)
     {
+        // Constants for Earth radius and conversion between degrees and radians
+        const double EarthRadius = 6371.0; // in km
+        const double DegToRad = Math.PI / 180.0;
+        
         // Extract latitudes, longitudes, and timestamps from previous locations
         double[] lats = _previousLocations.Select(l => l.Latitude).ToArray();
         double[] lons = _previousLocations.Select(l => l.Longitude).ToArray();
         double[] times = _previousLocations.Select(l => (l.Timestamp - _previousLocations[0].Timestamp)).ToArray();
 
-        // Fit a linear model to the latitudes and longitudes over time
-        var latRegression = SimpleRegression.Fit(times, lats);
-        var lonRegression = SimpleRegression.Fit(times, lons);
+        // Calculate distances between consecutive locations using Haversine formula
+        double[] distances = new double[_previousLocations.Count - 1];
+        for (int i = 0; i < distances.Length; i++)
+        {
+            double lat1 = lats[i] * DegToRad;
+            double lon1 = lons[i] * DegToRad;
+            double lat2 = lats[i + 1] * DegToRad;
+            double lon2 = lons[i + 1] * DegToRad;
+
+            double dLat = lat2 - lat1;
+            double dLon = lon2 - lon1;
+
+            double a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                       Math.Cos(lat1) * Math.Cos(lat2) *
+                       Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+
+            double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+            distances[i] = EarthRadius * c;
+        }
+        
+        // Fit a linear model to the distances over time
+        var distanceRegression = SimpleRegression.Fit(times.Skip(1).ToArray(), distances);
+
+        // Calculate the predicted distance and direction from the last location to the target location
+        double targetTime = (targetTimestamp - _previousLocations.Last().Timestamp);
+        double targetDistance = distanceRegression.A * targetTime + distanceRegression.B;
+        double targetDirection = Math.Atan2(lats.Last() - lats[_previousLocations.Count - 2], lons.Last() - lons[_previousLocations.Count - 2]);
 
         // Calculate the predicted latitude and longitude at the target timestamp
-        double targetTime = (timestamp - _previousLocations[0].Timestamp);
-        double targetLat = latRegression.A * targetTime + latRegression.B;
-        double targetLon = lonRegression.A * targetTime + lonRegression.B;
-
+        double targetLat = Math.Asin(Math.Sin(lats.Last() * DegToRad) * Math.Cos(targetDistance / EarthRadius) +
+                                     Math.Cos(lats.Last() * DegToRad) * Math.Sin(targetDistance / EarthRadius) * Math.Cos(targetDirection));
+        double targetLon = lons.Last() * DegToRad + Math.Atan2(Math.Sin(targetDirection) * Math.Sin(targetDistance / EarthRadius) * Math.Cos(lats.Last() * DegToRad),
+            Math.Cos(targetDistance / EarthRadius) - Math.Sin(lats.Last() * DegToRad) * Math.Sin(targetLat));
 
         return (targetLat, targetLon);
     }
