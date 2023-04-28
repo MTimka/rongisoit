@@ -387,6 +387,7 @@ public class GreeterService : Greeter.GreeterBase
 
                                 var lpm = new LocationPredictionModel(m_trainLocationsCache[trainId]);
                                 var (r_lat, r_lon) = lpm.PredictNextLocation(ee_timestamp);
+                                Console.WriteLine($"{tLoc.Latitude} {tLoc.Longitude}  r_lat {r_lat} r_lon {r_lon}");
                                 // var res = TrainLocationPredictor.PredictTrainLocationAtTimestamp(tLocsMapped, ee_timestamp);
 
                                 var tLocU = new TrainLocation
