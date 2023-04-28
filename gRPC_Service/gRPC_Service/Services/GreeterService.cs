@@ -365,7 +365,7 @@ public class GreeterService : Greeter.GreeterBase
                             m_trainLocationsCache[trainId].Add(tLoc);
                             
                             // try to predict 
-                            if (m_trainLocationsCache.Count > 4)
+                            if (m_trainLocationsCache[trainId].Count > 4)
                             {
                                 var tLocsMapped = m_trainLocationsCache[trainId]
                                     .Select(x => Tuple.Create(x.Latitude, x.Longitude, x.Timestamp)).ToList();
