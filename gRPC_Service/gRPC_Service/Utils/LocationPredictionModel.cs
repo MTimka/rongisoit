@@ -35,7 +35,7 @@ public class LocationPredictionModel
 
         // Predict the location at the next timestamp (10:50:00)
         // double nextTimestamp = (_previousLocations.Last().Timestamp - _previousLocations[0].Timestamp) + 600; // 600 seconds = 10 minutes
-        double nextTimestamp = timestamp;
+        double nextTimestamp = timestamp - _previousLocations[0].Timestamp;
         double nextLatitude = latitudeCoeffs.Item1 * nextTimestamp + latitudeCoeffs.Item2;
         double nextLongitude = longitudeCoeffs.Item1 * nextTimestamp + longitudeCoeffs.Item2;
 
