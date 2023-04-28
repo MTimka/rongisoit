@@ -386,14 +386,14 @@ public class GreeterService : Greeter.GreeterBase
                                 double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + 10;
 
                                 var lpm = new LocationPredictionModel(m_trainLocationsCache[trainId]);
-                                var res = lpm.PredictNextLocation(ee_timestamp);
+                                var (r_lat, r_lon) = lpm.PredictNextLocation(ee_timestamp);
                                 // var res = TrainLocationPredictor.PredictTrainLocationAtTimestamp(tLocsMapped, ee_timestamp);
 
                                 var tLocU = new TrainLocation
                                 {
                                     TrainId = trainId + "_pres",
-                                    Latitude = res.Latitude,
-                                    Longitude = res.Longitude,
+                                    Latitude = r_lat,
+                                    Longitude = r_lon,
                                     Timestamp = ee_timestamp,
                                 };
                                 
