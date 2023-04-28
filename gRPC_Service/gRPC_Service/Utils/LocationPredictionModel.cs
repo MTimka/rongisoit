@@ -41,6 +41,11 @@ public class LocationPredictionModel
         var qr = inputMatrix.QR();
         var beta = qr.Solve(outputVector);
 
+        foreach (var it in beta)
+        {
+            Console.WriteLine(it);
+        }
+
         // Predict the next location using the coefficients from the linear regression
         var lastLocation = _previousLocations[_previousLocations.Count - 1];
         // var nextTimestamp = lastLocation.Timestamp.AddSeconds(60); // predict one minute into the future
