@@ -22,36 +22,21 @@ public class LocationPredictionModel
 
     public (double, double) PredictNextLocation(double timestamp)
     {
-        // Perform linear regression to predict the latitude and longitude of the next location
-        var x = _previousLocations.Select(l => l.Timestamp).ToArray();
-        var y1 = _previousLocations.Select(l => l.Latitude).ToArray();
-        var y2 = _previousLocations.Select(l => l.Longitude).ToArray();
+        TrainLocation previousLocation = _previousLocations[_previousLocations.Count - 2];
+        TrainLocation currentLocation = _previousLocations[_previousLocations.Count - 1];
+        
+        double timeDelta = (currentLocation.Timestamp - previousLocation.Timestamp);
+        double latDelta = currentLocation.Latitude - previousLocation.Latitude;
+        double lonDelta = currentLocation.Longitude - previousLocation.Longitude;
 
-        var slope1 = LinearRegression(x, y1);
-        var intercept1 = y1.Average() - slope1 * x.Average();
-        var nextLatitude = slope1 * (x.Max() + TimeSpan.FromSeconds(10).Ticks) + intercept1;
+        double latVelocity = latDelta / timeDelta;
+        double lonVelocity = lonDelta / timeDelta;
 
-        var slope2 = LinearRegression(x, y2);
-        var intercept2 = y2.Average() - slope2 * x.Average();
-        var nextLongitude = slope2 * (x.Max() + TimeSpan.FromSeconds(10).Ticks) + intercept2;
+        double targetTimeDelta = (timestamp - currentLocation.Timestamp);
+        double targetLat = currentLocation.Latitude + (latVelocity * targetTimeDelta);
+        double targetLon = currentLocation.Longitude + (lonVelocity * targetTimeDelta);
 
-
-        return (nextLatitude, nextLongitude);
-    }
-    
-    static double LinearRegression(double[] x, double[] y)
-    {
-        var n = x.Length;
-        var xMean = x.Average();
-        var yMean = y.Average();
-        var numerator = 0.0;
-        var denominator = 0.0;
-        for (var i = 0; i < n; i++)
-        {
-            numerator += (x[i] - xMean) * (y[i] - yMean);
-            denominator += (x[i] - xMean) * (x[i] - xMean);
-        }
-        return numerator / denominator;
+        return (targetLat, targetLon);
     }
     
     // Predict the next train location
