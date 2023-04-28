@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
 using MathNet.Numerics.LinearRegression;
-using MathNet.Numerics;
 
 
 public class LocationPredictionModel
@@ -22,19 +21,20 @@ public class LocationPredictionModel
 
     public (double, double) PredictNextLocation(double timestamp)
     {
-        TrainLocation previousLocation = _previousLocations[_previousLocations.Count - 2];
-        TrainLocation currentLocation = _previousLocations[_previousLocations.Count - 1];
-        
-        double timeDelta = (currentLocation.Timestamp - previousLocation.Timestamp);
-        double latDelta = currentLocation.Latitude - previousLocation.Latitude;
-        double lonDelta = currentLocation.Longitude - previousLocation.Longitude;
+        // Extract latitudes, longitudes, and timestamps from previous locations
+        double[] lats = _previousLocations.Select(l => l.Latitude).ToArray();
+        double[] lons = _previousLocations.Select(l => l.Longitude).ToArray();
+        double[] times = _previousLocations.Select(l => (l.Timestamp - _previousLocations[0].Timestamp)).ToArray();
 
-        double latVelocity = latDelta / timeDelta;
-        double lonVelocity = lonDelta / timeDelta;
+        // Fit a linear model to the latitudes and longitudes over time
+        var latRegression = SimpleRegression.Fit(times, lats);
+        var lonRegression = SimpleRegression.Fit(times, lons);
 
-        double targetTimeDelta = (timestamp - currentLocation.Timestamp);
-        double targetLat = currentLocation.Latitude + (latVelocity * targetTimeDelta);
-        double targetLon = currentLocation.Longitude + (lonVelocity * targetTimeDelta);
+        // Calculate the predicted latitude and longitude at the target timestamp
+        double targetTime = (timestamp - _previousLocations[0].Timestamp);
+        double targetLat = latRegression.A * targetTime + latRegression.B;
+        double targetLon = lonRegression.A * targetTime + lonRegression.B;
+
 
         return (targetLat, targetLon);
     }
