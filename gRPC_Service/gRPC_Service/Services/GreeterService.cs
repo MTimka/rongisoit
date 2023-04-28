@@ -398,13 +398,13 @@ public class GreeterService : Greeter.GreeterBase
                                 UpdateTrainLocationRaw(tLocU);
                             }
 
-                            UpdateTrainLocationRaw(tLoc);
+                            // UpdateTrainLocationRaw(tLoc);
 
                         }
                         else
                         {
                             m_trainLocationsCache[trainId] = new List<TrainLocation>() { tLoc };
-                            UpdateTrainLocationRaw(tLoc);
+                            // UpdateTrainLocationRaw(tLoc);
                         }
                     }
                     
