@@ -371,17 +371,19 @@ public class GreeterService : Greeter.GreeterBase
                                     // .Select(x => Tuple.Create(x.Latitude, x.Longitude, x.Timestamp)).ToList();
 
                                 // Get the time zone info for Estonia
-                                TimeZoneInfo estoniaTimeZone =
-                                    TimeZoneInfo.FindSystemTimeZoneById("E. Europe Standard Time");
-
-                                // Get the current date and time in the Estonian time zone
-                                DateTimeOffset estoniaTime =
-                                    TimeZoneInfo.ConvertTime(DateTimeOffset.Now, estoniaTimeZone);
-                                estoniaTime.AddSeconds(10);
+                                // TimeZoneInfo estoniaTimeZone =
+                                //     TimeZoneInfo.FindSystemTimeZoneById("E. Europe Standard Time");
+                                //
+                                // // Get the current date and time in the Estonian time zone
+                                // DateTimeOffset estoniaTime =
+                                //     TimeZoneInfo.ConvertTime(DateTimeOffset.Now, estoniaTimeZone);
+                                // estoniaTime.AddSeconds(10);
+                                //
+                                // // Convert DateTimeOffset to Unix timestamp
+                                // long ee_unixTimestamp = estoniaTime.ToUnixTimeMilliseconds();
+                                // double ee_timestamp = ee_unixTimestamp / 1000.0;
                                 
-                                // Convert DateTimeOffset to Unix timestamp
-                                long ee_unixTimestamp = estoniaTime.ToUnixTimeMilliseconds();
-                                double ee_timestamp = ee_unixTimestamp / 1000.0;
+                                double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + 10;
 
                                 var lpm = new LocationPredictionModel(m_trainLocationsCache[trainId]);
                                 var res = lpm.PredictNextLocation(ee_timestamp);
