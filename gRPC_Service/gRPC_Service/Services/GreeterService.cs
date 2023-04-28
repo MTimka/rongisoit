@@ -317,7 +317,7 @@ public class GreeterService : Greeter.GreeterBase
     {
         Console.WriteLine($"GetData [] begin");
 
-        var predictor = new TrainLocationPredictor();
+        // var predictor = new TrainLocationPredictor();
 
         var interval = TimeSpan.FromMilliseconds(2000);
         while (true)
@@ -365,8 +365,8 @@ public class GreeterService : Greeter.GreeterBase
                             m_trainLocationsCache[trainId].Add(tLoc);
                             
                             // try to predict 
-                            List<Tuple<double, double, double>> tLocsMapped = m_trainLocationsCache[trainId]
-                                .Select(x => Tuple.Create(x.Latitude, x.Longitude, x.Timestamp)).ToList();
+                            var tLocsMapped = m_trainLocationsCache[trainId]
+                                .Select(x => new[] {x.Latitude, x.Longitude, x.Timestamp}).ToArray();
                             
                             // Get the time zone info for Estonia
                             TimeZoneInfo estoniaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. Europe Standard Time");
@@ -378,14 +378,14 @@ public class GreeterService : Greeter.GreeterBase
                             long ee_unixTimestamp = estoniaTime.ToUnixTimeMilliseconds();
                             double ee_timestamp = ee_unixTimestamp / 1000.0;
                             
-                            Tuple<double, double, double> res = predictor.PredictLocation(ee_timestamp, tLocsMapped);
+                            var res = TrainLocationPredictor.PredictTrainLocationAtTimestamp(tLocsMapped, ee_timestamp);
                             
                             var tLocU = new TrainLocation
                             {
                                 TrainId = trainId,
-                                Latitude = res.Item1,
-                                Longitude = res.Item2,
-                                Timestamp = res.Item3,
+                                Latitude = res[0],
+                                Longitude = res[1],
+                                Timestamp = ee_timestamp,
                             };
                             UpdateTrainLocationRaw(tLocU);
 
