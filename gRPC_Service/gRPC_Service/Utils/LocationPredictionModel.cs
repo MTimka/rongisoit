@@ -30,28 +30,33 @@ public class LocationPredictionModel
             inputMatrix[i, 2] = _previousLocations[i].Timestamp;
         }
 
-        // Create a vector to hold the output data (next latitude, next longitude, next timestamp)
-        var outputVector = DenseVector.Build.Dense(_previousLocations.Count);
+        // Create a matrix to hold the output data (next latitude, next longitude)
+        var outputMatrix = DenseMatrix.Build.Dense(_previousLocations.Count, 2);
         for (int i = 0; i < _previousLocations.Count; i++)
         {
-            outputVector[i] = i < _previousLocations.Count - 1 ? _previousLocations[i + 1].Latitude : 0;
+            outputMatrix[i, 0] = i < _previousLocations.Count - 1 ? _previousLocations[i + 1].Latitude : 0;
+            outputMatrix[i, 1] = i < _previousLocations.Count - 1 ? _previousLocations[i + 1].Longitude : 0;
         }
 
         // Use QR decomposition to solve the linear regression problem
         var qr = inputMatrix.QR();
-        var beta = qr.Solve(outputVector);
+        var beta = qr.Solve(outputMatrix);
 
-        foreach (var it in beta)
+        for (int i = 0; i < beta.RowCount; i++)
         {
-            Console.WriteLine(it);
+            for (int j = 0; j < beta.ColumnCount; j++)
+            {
+                Console.Write(beta[i, j] + " ");
+            }
+            Console.WriteLine();
         }
 
         // Predict the next location using the coefficients from the linear regression
         var lastLocation = _previousLocations[_previousLocations.Count - 1];
         // var nextTimestamp = lastLocation.Timestamp.AddSeconds(60); // predict one minute into the future
         var nextTimestamp = timestamp;  // predict one minute into the future
-        var nextLatitude = beta[0] * lastLocation.Latitude + beta[1] * lastLocation.Longitude + beta[2] * nextTimestamp;
-        var nextLongitude = beta[3] * lastLocation.Latitude + beta[4] * lastLocation.Longitude + beta[5] * nextTimestamp;
+        var nextLatitude = beta[0, 0] * lastLocation.Latitude + beta[0, 1] * lastLocation.Longitude + beta[0, 2] * nextTimestamp;
+        var nextLongitude = beta[1, 0] * lastLocation.Latitude + beta[1, 1] * lastLocation.Longitude + beta[1, 2] * nextTimestamp;
 
         return new TrainLocation()
         {
