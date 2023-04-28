@@ -22,24 +22,36 @@ public class LocationPredictionModel
 
     public (double, double) PredictNextLocation(double timestamp)
     {
-        // Extract the timestamps and convert them to seconds
-        double[] timestamps = _previousLocations.Select(l => (l.Timestamp - _previousLocations[0].Timestamp)).ToArray();
+        // Perform linear regression to predict the latitude and longitude of the next location
+        var x = _previousLocations.Select(l => l.Timestamp).ToArray();
+        var y1 = _previousLocations.Select(l => l.Latitude).ToArray();
+        var y2 = _previousLocations.Select(l => l.Longitude).ToArray();
 
-        // Extract the latitudes and longitudes
-        double[] latitudes = _previousLocations.Select(l => l.Latitude).ToArray();
-        double[] longitudes = _previousLocations.Select(l => l.Longitude).ToArray();
+        var slope1 = LinearRegression(x, y1);
+        var intercept1 = y1.Average() - slope1 * x.Average();
+        var nextLatitude = slope1 * (x.Max() + TimeSpan.FromSeconds(10).Ticks) + intercept1;
 
-        // Perform linear regression on the latitudes and longitudes separately
-        var latitudeCoeffs = Fit.Line(timestamps, latitudes);
-        var longitudeCoeffs = Fit.Line(timestamps, longitudes);
+        var slope2 = LinearRegression(x, y2);
+        var intercept2 = y2.Average() - slope2 * x.Average();
+        var nextLongitude = slope2 * (x.Max() + TimeSpan.FromSeconds(10).Ticks) + intercept2;
 
-        // Predict the location at the next timestamp (10:50:00)
-        double nextTimestamp = (_previousLocations.Last().Timestamp - _previousLocations[0].Timestamp) + 6; // 600 seconds = 10 minutes
-        // double nextTimestamp = timestamp - _previousLocations[0].Timestamp;
-        double nextLatitude = latitudeCoeffs.Item1 * nextTimestamp + latitudeCoeffs.Item2;
-        double nextLongitude = longitudeCoeffs.Item1 * nextTimestamp + longitudeCoeffs.Item2;
 
         return (nextLatitude, nextLongitude);
+    }
+    
+    static double LinearRegression(double[] x, double[] y)
+    {
+        var n = x.Length;
+        var xMean = x.Average();
+        var yMean = y.Average();
+        var numerator = 0.0;
+        var denominator = 0.0;
+        for (var i = 0; i < n; i++)
+        {
+            numerator += (x[i] - xMean) * (y[i] - yMean);
+            denominator += (x[i] - xMean) * (x[i] - xMean);
+        }
+        return numerator / denominator;
     }
     
     // Predict the next train location
