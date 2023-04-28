@@ -377,7 +377,8 @@ public class GreeterService : Greeter.GreeterBase
                                 // Get the current date and time in the Estonian time zone
                                 DateTimeOffset estoniaTime =
                                     TimeZoneInfo.ConvertTime(DateTimeOffset.Now, estoniaTimeZone);
-
+                                estoniaTime.AddSeconds(10);
+                                
                                 // Convert DateTimeOffset to Unix timestamp
                                 long ee_unixTimestamp = estoniaTime.ToUnixTimeMilliseconds();
                                 double ee_timestamp = ee_unixTimestamp / 1000.0;
