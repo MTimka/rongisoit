@@ -42,21 +42,21 @@ public class LocationPredictionModel
         var qr = inputMatrix.QR();
         var beta = qr.Solve(outputMatrix);
 
-        for (int i = 0; i < beta.RowCount; i++)
-        {
-            for (int j = 0; j < beta.ColumnCount; j++)
-            {
-                Console.Write(beta[i, j] + " ");
-            }
-            Console.WriteLine();
-        }
+        // for (int i = 0; i < beta.RowCount; i++)
+        // {
+        //     for (int j = 0; j < beta.ColumnCount; j++)
+        //     {
+        //         Console.Write(beta[i, j] + " ");
+        //     }
+        //     Console.WriteLine();
+        // }
 
         // Predict the next location using the coefficients from the linear regression
         var lastLocation = _previousLocations[_previousLocations.Count - 1];
         // var nextTimestamp = lastLocation.Timestamp.AddSeconds(60); // predict one minute into the future
         var nextTimestamp = timestamp;  // predict one minute into the future
-        var nextLatitude = beta[0, 0] * lastLocation.Latitude + beta[0, 1] * lastLocation.Longitude + beta[0, 2] * nextTimestamp;
-        var nextLongitude = beta[1, 0] * lastLocation.Latitude + beta[1, 1] * lastLocation.Longitude + beta[1, 2] * nextTimestamp;
+        var nextLatitude = beta[0, 0] * lastLocation.Latitude + beta[1, 0] * lastLocation.Longitude + beta[2, 0] * nextTimestamp;
+        var nextLongitude = beta[0, 1] * lastLocation.Latitude + beta[1, 1] * lastLocation.Longitude + beta[2, 1] * nextTimestamp;
 
         return new TrainLocation()
         {
