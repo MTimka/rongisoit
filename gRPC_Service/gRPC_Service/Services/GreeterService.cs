@@ -365,7 +365,8 @@ public class GreeterService : Greeter.GreeterBase
                             m_trainLocationsCache[trainId].Add(tLoc);
                             
                             // try to predict 
-                            if (m_trainLocationsCache[trainId].Count > 4)
+                            if (false)
+                            // if (m_trainLocationsCache[trainId].Count > 4)
                             {
                                 // var tLocsMapped = m_trainLocationsCache[trainId]
                                     // .Select(x => Tuple.Create(x.Latitude, x.Longitude, x.Timestamp)).ToList();
@@ -401,13 +402,13 @@ public class GreeterService : Greeter.GreeterBase
                                 UpdateTrainLocationRaw(tLocU);
                             }
 
-                            // UpdateTrainLocationRaw(tLoc);
+                            UpdateTrainLocationRaw(tLoc);
 
                         }
                         else
                         {
                             m_trainLocationsCache[trainId] = new List<TrainLocation>() { tLoc };
-                            // UpdateTrainLocationRaw(tLoc);
+                            UpdateTrainLocationRaw(tLoc);
                         }
                     }
                     
