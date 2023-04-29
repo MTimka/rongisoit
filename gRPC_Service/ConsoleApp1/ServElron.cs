@@ -40,10 +40,10 @@ public class ServElron
         command.Parameters.AddWithValue("@liin", liin);
         command.Parameters.AddWithValue("@reisiAlgusAeg", reisiAlgusAeg);
         command.Parameters.AddWithValue("@reisiLoppAeg", reisiLoppAeg);
-        command.Parameters.AddWithValue("@kiirus", kiirus);
-        command.Parameters.AddWithValue("@latitude", latitude);
-        command.Parameters.AddWithValue("@longitude", longitude);
-        command.Parameters.AddWithValue("@rongiSuund", rongiSuund);
+        command.Parameters.AddWithValue("@kiirus", kiirusInt);
+        command.Parameters.AddWithValue("@latitude", latitudeDecimal);
+        command.Parameters.AddWithValue("@longitude", longitudeDecimal);
+        command.Parameters.AddWithValue("@rongiSuund", rongiSuundInt);
         command.Parameters.AddWithValue("@erinevusPlaanist", erinevusPlaanist);
         command.Parameters.AddWithValue("@lisateade", lisateade);
         command.Parameters.AddWithValue("@pohjusTeade", pohjusTeade);
