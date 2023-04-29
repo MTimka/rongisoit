@@ -30,11 +30,18 @@ public class ServElron
         connection.Open();
 
         using var command = new NpgsqlCommand("INSERT INTO serv_elron (reis, liin, reisi_algus_aeg, " +
-            "reisi_lopp_aeg, kiirus, latitude, longitude, rongi_suund, erinevus_plaanist, lisateade, " +
-            "pohjus_teade, avalda_kodulehel, asukoha_uuendus, reisi_staatus, viimane_peatus) " +
-            "VALUES (@reis, @liin, @reisiAlgusAeg, @reisiLoppAeg, @kiirus, @latitude, @longitude, " +
-            "@rongiSuund, @erinevusPlaanist, @lisateade, @pohjusTeade, @avaldaKodulehel, " +
-            "@asukohaUuendus, @reisiStaatus, @viimanePeatus)", connection);
+                                              "reisi_lopp_aeg, kiirus, latitude, longitude, rongi_suund, erinevus_plaanist, lisateade, " +
+                                              "pohjus_teade, avalda_kodulehel, asukoha_uuendus, reisi_staatus, viimane_peatus) " +
+                                              "VALUES (@reis, @liin, @reisiAlgusAeg, @reisiLoppAeg, @kiirus, @latitude, @longitude, " +
+                                              "@rongiSuund, @erinevusPlaanist, @lisateade, @pohjusTeade, @avaldaKodulehel, " +
+                                              "@asukohaUuendus, @reisiStaatus, @viimanePeatus) " +
+                                              "ON CONFLICT (asukoha_uuendus) DO UPDATE SET " +
+                                              "reis = @reis, liin = @liin, reisi_algus_aeg = @reisiAlgusAeg, reisi_lopp_aeg = @reisiLoppAeg, " +
+                                              "kiirus = @kiirus, latitude = @latitude, longitude = @longitude, rongi_suund = @rongiSuund, " +
+                                              "erinevus_plaanist = @erinevusPlaanist, lisateade = @lisateade, pohjus_teade = @pohjusTeade, " +
+                                              "avalda_kodulehel = @avaldaKodulehel, reisi_staatus = @reisiStaatus, viimane_peatus = @viimanePeatus", connection);
+
+
 
         command.Parameters.AddWithValue("@reis", reis);
         command.Parameters.AddWithValue("@liin", liin);
