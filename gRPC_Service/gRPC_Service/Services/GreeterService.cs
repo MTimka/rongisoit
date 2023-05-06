@@ -318,7 +318,7 @@ public class GreeterService : Greeter.GreeterBase
         Console.WriteLine($"GetData [] begin");
 
         var predictor = new TrainLocationPredictor();
-        PointUtils.g_bDebug = true;
+        // PointUtils.g_bDebug = true;
 
         var interval = TimeSpan.FromMilliseconds(2000);
         while (true)

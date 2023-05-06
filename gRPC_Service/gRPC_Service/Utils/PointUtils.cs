@@ -362,6 +362,7 @@ public class PointUtils
                                 { Console.WriteLine("new track continuation: " + i); }
                                 
                                 currentTrack = tracks[i];
+                                currentTrackIndex = i;
                                 nextNodeIndex = j;
                                 foundTrack = true;
                                 break;
