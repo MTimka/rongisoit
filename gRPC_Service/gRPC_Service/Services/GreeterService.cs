@@ -360,11 +360,11 @@ public class GreeterService : Greeter.GreeterBase
 
                         if (dateTimeOffset == null)
                         {
-                            throw Exception("cant convert '" + strDt + "' with  yyyy-MM-dd'T'HH:mm:ss nor yyyy-MM-dd'T'HH:mm:ss.fff");
+                            throw new Exception("cant convert '" + strDt + "' with  yyyy-MM-dd'T'HH:mm:ss nor yyyy-MM-dd'T'HH:mm:ss.fff");
                         }
                         
                         // Convert DateTimeOffset to Unix timestamp
-                        long unixTimestamp = dateTimeOffset.ToUnixTimeMilliseconds();
+                        long unixTimestamp = dateTimeOffset?.ToUnixTimeMilliseconds() ?? 0;
                         double timestamp = unixTimestamp / 1000.0;
 
                         var tLoc = new TrainLocation
