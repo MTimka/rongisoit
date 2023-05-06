@@ -2,10 +2,10 @@ namespace gRPC_Service.Utils;
 
 public class SimplePredictor
 {
-    public static Tuple<double, double> PredictLocation(List<TrainLocation> trainLocations, long timestamp)
+    public static Tuple<double, double> PredictLocation(List<TrainLocation> trainLocations, double timestamp)
     {
         // Convert timestamp to DateTime
-        var targetTime = DateTimeOffset.FromUnixTimeSeconds(timestamp);
+        var targetTime = timestamp;
 
         // Prepare data for linear regression
         List<double> timestamps = new List<double>();
@@ -14,10 +14,10 @@ public class SimplePredictor
 
         foreach (var location in trainLocations)
         {
-            var locationTime = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(location.Timestamp));
+            var locationTime = location.Timestamp;
 
             // Calculate time difference in seconds
-            double timeDiff = (targetTime - locationTime).TotalSeconds;
+            double timeDiff = targetTime - locationTime;
 
             timestamps.Add(timeDiff);
             latitudes.Add((double)location.Latitude);
