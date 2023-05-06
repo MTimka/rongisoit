@@ -16,6 +16,8 @@
         <PackageReference Include="Json.Net" Version="1.0.33" />
         <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="OsmSharp" Version="6.2.0" />
+        <PackageReference Include="ScottPlot" Version="4.1.63" />
     </ItemGroup>
 
 </Project>

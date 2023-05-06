@@ -317,7 +317,7 @@ public class GreeterService : Greeter.GreeterBase
     {
         Console.WriteLine($"GetData [] begin");
 
-        // var predictor = new TrainLocationPredictor();
+        var predictor = new TrainLocationPredictor();
 
         var interval = TimeSpan.FromMilliseconds(2000);
         while (true)
@@ -342,7 +342,7 @@ public class GreeterService : Greeter.GreeterBase
                         var strDt = (string)jsonObject["asukoha_uuendus"];
                         
                         // Convert string to DateTimeOffset object
-                        DateTimeOffset dateTimeOffset = DateTimeOffset.ParseExact(strDt, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+                        DateTimeOffset dateTimeOffset = DateTimeOffset.ParseExact(strDt, "yyyy-MM-dd'T'HH:mm:ss.fff", CultureInfo.InvariantCulture);
 
                         // Convert DateTimeOffset to Unix timestamp
                         long unixTimestamp = dateTimeOffset.ToUnixTimeMilliseconds();
@@ -358,15 +358,15 @@ public class GreeterService : Greeter.GreeterBase
 
                         if (m_trainLocationsCache.ContainsKey(trainId))
                         {
-                            if (m_trainLocationsCache[trainId].Count > 6)
+                            if (m_trainLocationsCache[trainId].Count > 3)
                             {
                                 m_trainLocationsCache[trainId].RemoveAt(0);
                             }
                             m_trainLocationsCache[trainId].Add(tLoc);
                             
                             // try to predict 
-                            if (false)
-                            // if (m_trainLocationsCache[trainId].Count > 4)
+                            // if (false)
+                            if (m_trainLocationsCache[trainId].Count > 2)
                             {
                                 // var tLocsMapped = m_trainLocationsCache[trainId]
                                     // .Select(x => Tuple.Create(x.Latitude, x.Longitude, x.Timestamp)).ToList();
@@ -386,8 +386,7 @@ public class GreeterService : Greeter.GreeterBase
                                 
                                 double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + 10;
 
-                                var lpm = new LocationPredictionModel(m_trainLocationsCache[trainId]);
-                                var (r_lat, r_lon) = lpm.PredictNextLocation(ee_timestamp);
+                                var (r_lat, r_lon) = predictor.Predict(m_trainLocationsCache[trainId], Convert.ToInt64(ee_timestamp));
                                 Console.WriteLine($"{tLoc.Latitude} {tLoc.Longitude}  r_lat {r_lat} r_lon {r_lon}");
                                 // var res = TrainLocationPredictor.PredictTrainLocationAtTimestamp(tLocsMapped, ee_timestamp);
 

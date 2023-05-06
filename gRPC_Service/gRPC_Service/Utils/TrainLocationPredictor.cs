@@ -1,65 +1,101 @@
+using System.Globalization;
+
 namespace gRPC_Service.Utils;
 
 using System;
-using MathNet.Numerics.LinearAlgebra;
-using MathNet.Numerics.LinearAlgebra.Double;
 
 
 public class TrainLocationPredictor
 {
+    private List<List<Tuple<double, double>>> railways;
+    private List<List<dynamic>> tracks;
     
-    public static double[] PredictTrainLocationAtTimestamp(double[][] trainLocations, double timestamp)
+    public TrainLocationPredictor()
     {
-        // Create a Kalman filter to track the train's location
-        var kf = new KalmanFilter(4, 2)
+        railways = new List<List<Tuple<double, double>>>();
+        string filePath = "train_tracks.data";
+        
+        // Open the file for reading
+        using (StreamReader reader = new StreamReader(filePath))
         {
-            F = Matrix<double>.Build.DenseOfArray(new double[,]
+            string line;
+            int lineCount = 0;
+            
+            // Read and process each line until the end of the file is reached
+            while ((line = reader.ReadLine()) != null)
             {
-                { 1, 0, 1, 0 },
-                { 0, 1, 0, 1 },
-                { 0, 0, 1, 0 },
-                { 0, 0, 0, 1 }
-            }),
-            H = Matrix<double>.Build.DenseOfArray(new double[,]
-            {
-                { 1, 0, 0, 0 },
-                { 0, 1, 0, 0 }
-            }),
-            R = Matrix<double>.Build.DenseOfArray(new double[,]
-            {
-                { 10, 0 },
-                { 0, 10 }
-            }),
-            Q = Matrix<double>.Build.DenseOfArray(new double[,]
-            {
-                { 0.0025, 0, 0.005, 0 },
-                { 0, 0.0025, 0, 0.005 },
-                { 0.005, 0, 0.01, 0 },
-                { 0, 0.005, 0, 0.01 }
-            }),
-            x = Matrix<double>.Build.DenseOfArray(new double[,]
-            {
-                { trainLocations[trainLocations.Length - 1][0] }, 
-                { trainLocations[trainLocations.Length - 1][1] }, 
-                { 0 }, 
-                { 0 }
-            }),
-            P = Matrix<double>.Build.DenseIdentity(4) * 500
-        };
+                lineCount += 1;
 
-        // Predict the location of the train at the desired timestamp
-        var ldt1 = DateTimeOffset.FromUnixTimeSeconds((long)trainLocations[trainLocations.Length - 1][2]);
-        var ldt2 = DateTimeOffset.FromUnixTimeSeconds((long)timestamp);
-        
-        var timeDelta = (ldt2 - ldt1).TotalSeconds;
-        kf.Predict(timeDelta);
+                // Process the line
+                var splits = line.Split(" ");
+                
+                if (splits.Length < 4)
+                {
+                    continue;
+                }
 
-        Matrix<double> predictedLocationMatrix = kf.x.SubMatrix(0, 2, 0, 1);
-        Vector<double> predictedLocationVector = predictedLocationMatrix.Column(0);
-        double latitude = predictedLocationVector[0];
-        double longitude = predictedLocationVector[1];
+                var track = new List<Tuple<double, double>>();
+                // Console.WriteLine("line " + lineCount);
+                for (var i = 0; i < splits.Length; i += 2)
+                {
+                    var item = Tuple.Create(
+                        Convert.ToDouble(splits[i], CultureInfo.InvariantCulture), 
+                        Convert.ToDouble(splits[i+1], CultureInfo.InvariantCulture)
+                    );
+                    track.Add(item);
+                }
+                
+                railways.Add(track);
+            }
+        }
+
+        Console.WriteLine("railways len " + railways.Count);
         
-        return new[] {latitude, longitude };
+        tracks = new List<List<dynamic>>();
+        foreach (List<Tuple<double, double>> track in railways)
+        {
+            var res = new List<dynamic>();
+            foreach (Tuple<double, double> point in track)
+            {
+                var pointDict = new 
+                {
+                    Latitude = point.Item1,
+                    Longitude = point.Item2
+                };
+                res.Add(pointDict);
+            }
+            tracks.Add(res);
+        }
     }
+
+    public Tuple<double, double> Predict(List<TrainLocation> trainLocations, long timestamp)
+    {
+        var lastLoc = new
+        {
+            Latitude = trainLocations.Last().Latitude,
+            Longitude = trainLocations.Last().Longitude
+        };
+        
+        var (closestTrack, closest_track_index) = PointUtils.GetClosestTract(lastLoc, railways);
+        
+        var trainLocationsC = new List<dynamic>();
+        foreach (var item in trainLocations)
+        {
+            var res = new
+            {
+                Latitude = item.Latitude,
+                Longitude = item.Longitude,
+                timestamp = Convert.ToInt64(item.Timestamp)
+            };
+            
+            trainLocationsC.Add(res);
+        }
+
+        var estimatedLocation =
+            PointUtils.TrackWalker(tracks, trainLocationsC, closest_track_index, timestamp);
+
+        return estimatedLocation;
+    }
+    
 }
 
