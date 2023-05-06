@@ -406,10 +406,10 @@ public class GreeterService : Greeter.GreeterBase
                                 
                                 double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + 10;
 
-                                foreach (var loc in m_trainLocationsCache[trainId])
-                                {
-                                    Console.WriteLine("1 " + loc.Latitude + " " + loc.Longitude + " " + loc.Timestamp);
-                                }
+                                // foreach (var loc in m_trainLocationsCache[trainId])
+                                // {
+                                //     Console.WriteLine("1 " + loc.Latitude + " " + loc.Longitude + " " + loc.Timestamp);
+                                // }
 
                                 var (r_lat, r_lon) = SimplePredictor.PredictLocation(m_trainLocationsCache[trainId], Convert.ToInt64(ee_timestamp));
                                 Console.WriteLine($"{tLoc.Latitude} {tLoc.Longitude}  r_lat {r_lat} r_lon {r_lon}");
