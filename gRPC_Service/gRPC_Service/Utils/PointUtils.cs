@@ -280,6 +280,7 @@ public class PointUtils
 
         var currentLoc = closestPoint;
         var currentTrackIndex = closestTrackIndex;
+        var trackIndexCache = new List<int>() { currentTrackIndex };
         var currentTrack = tracks[closestTrackIndex];
         var secondsLeftToWalk = secondsToWalk;
 
@@ -328,6 +329,12 @@ public class PointUtils
                                 
                                 currentTrack = tracks[i];
                                 currentTrackIndex = i;
+                                
+                                // check if we r looping somehow, then break out
+                                if (trackIndexCache.Contains(currentTrackIndex))
+                                { break; }
+                                
+                                trackIndexCache.Add(currentTrackIndex);
                                 nextNodeIndex = j;
                                 foundTrack = true;
                                 break;
@@ -363,6 +370,12 @@ public class PointUtils
                                 
                                 currentTrack = tracks[i];
                                 currentTrackIndex = i;
+                                
+                                // check if we r looping somehow, then break out
+                                if (trackIndexCache.Contains(currentTrackIndex))
+                                { break; }
+                                
+                                trackIndexCache.Add(currentTrackIndex);
                                 nextNodeIndex = j;
                                 foundTrack = true;
                                 break;
