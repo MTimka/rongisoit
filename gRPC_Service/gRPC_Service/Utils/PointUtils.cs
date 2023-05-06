@@ -324,7 +324,7 @@ public class PointUtils
                             if (Abs(node.Latitude - currentTrack[^1].Latitude) < 0.0000001 && Abs(node.Longitude - currentTrack[^1].Longitude) < 0.0000001)
                             {
                                 if (g_bDebug == true)
-                                { Console.WriteLine("new track continuation: " + i); }
+                                { Console.WriteLine("new track continuation 1: " + i); }
                                 
                                 currentTrack = tracks[i];
                                 currentTrackIndex = i;
@@ -359,7 +359,7 @@ public class PointUtils
                             if (Abs(node.Latitude - currentTrack[0].Latitude) < 0.0000001 && Abs(node.Longitude - currentTrack[0].Longitude) < 0.0000001)
                             {
                                 if (g_bDebug == true)
-                                { Console.WriteLine("new track continuation: " + i); }
+                                { Console.WriteLine("new track continuation 2: " + i); }
                                 
                                 currentTrack = tracks[i];
                                 currentTrackIndex = i;
