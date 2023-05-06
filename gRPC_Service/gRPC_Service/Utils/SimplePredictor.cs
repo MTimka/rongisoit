@@ -2,37 +2,26 @@ namespace gRPC_Service.Utils;
 
 public class SimplePredictor
 {
-    public static Tuple<double, double> PredictLocation(List<TrainLocation> trainLocations, double timestamp)
+    public static Tuple<double, double> PredictLocation(List<TrainLocation> trainLocations, double targetTimestamp)
     {
-        // Convert timestamp to DateTime
-        var targetTime = timestamp;
+        // Extrapolate the location based on the rate of change between the last two known data points
 
-        // Prepare data for linear regression
-        List<double> timestamps = new List<double>();
-        List<double> latitudes = new List<double>();
-        List<double> longitudes = new List<double>();
+        // Get the last two known data points
+        var secondLastPoint = trainLocations[trainLocations.Count - 2];
+        var lastPoint = trainLocations[trainLocations.Count - 1];
 
-        foreach (var location in trainLocations)
-        {
-            var locationTime = location.Timestamp;
+        // Calculate the time difference and the fraction of time passed
+        double timeDiff = lastPoint.Timestamp - secondLastPoint.Timestamp;
+        double fraction = (targetTimestamp - lastPoint.Timestamp) / timeDiff;
 
-            // Calculate time difference in seconds
-            double timeDiff = targetTime - locationTime;
-            // Console.WriteLine("timeDiff " + timeDiff);
+        // Extrapolate the latitude and longitude
+        double latitudeDiff = lastPoint.Latitude - secondLastPoint.Latitude;
+        double longitudeDiff = lastPoint.Longitude - secondLastPoint.Longitude;
 
-            timestamps.Add(timeDiff);
-            latitudes.Add((double)location.Latitude);
-            longitudes.Add((double)location.Longitude);
-        }
+        double extrapolatedLatitude = lastPoint.Latitude + fraction * latitudeDiff;
+        double extrapolatedLongitude = lastPoint.Longitude + fraction * longitudeDiff;
 
-        // Perform linear regression
-        double latitude = LinearRegressionModel(latitudes, timestamps);
-        double longitude = LinearRegressionModel(longitudes, timestamps);
-
-        // Create and return the predicted location
-        var predictedLocation = Tuple.Create(latitude, longitude);
-
-        return predictedLocation;
+        return Tuple.Create(extrapolatedLatitude, extrapolatedLongitude);
     }
 
     private static double LinearRegressionModel(List<double> y, List<double> x)

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 // run few tests at first
 // DrawTracks.Test1();
 LinearTest.Test1();
+LinearTest.Test2();
 
 var builder = WebApplication.CreateBuilder(args);
 

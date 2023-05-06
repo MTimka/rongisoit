@@ -1,3 +1,5 @@
+using gRPC_Service.Utils;
+
 namespace gRPC_Service.Tests;
 
 public class LinearTest
@@ -18,6 +20,7 @@ public class LinearTest
 
             // Calculate time difference in seconds
             double timeDiff = (targetTime - locationTime).TotalSeconds;
+            Console.WriteLine("timeDiff "  + timeDiff);
 
             timestamps.Add(timeDiff);
             latitudes.Add((double)location["latitude"]);
@@ -84,5 +87,55 @@ public class LinearTest
 
         Console.WriteLine(" 1 " + predictedLocation["latitude"]);
         Console.WriteLine(" 1 " + predictedLocation["longitude"]);
+    }
+    
+    
+    static Tuple<double, double> PredictLocation(List<TrainLocation> data, double targetTimestamp)
+    {
+        // Extrapolate the location based on the rate of change between the last two known data points
+
+        // Get the last two known data points
+        var secondLastPoint = data[data.Count - 2];
+        var lastPoint = data[data.Count - 1];
+
+        // Calculate the time difference and the fraction of time passed
+        double timeDiff = lastPoint.Timestamp - secondLastPoint.Timestamp;
+        double fraction = (targetTimestamp - lastPoint.Timestamp) / timeDiff;
+
+        // Extrapolate the latitude and longitude
+        double latitudeDiff = lastPoint.Latitude - secondLastPoint.Latitude;
+        double longitudeDiff = lastPoint.Longitude - secondLastPoint.Longitude;
+
+        double extrapolatedLatitude = lastPoint.Latitude + fraction * latitudeDiff;
+        double extrapolatedLongitude = lastPoint.Longitude + fraction * longitudeDiff;
+
+        return Tuple.Create(extrapolatedLatitude, extrapolatedLongitude);
+    }
+    
+    public static void Test2()
+    {
+        // Sample usage
+       var trainLocations = new List<TrainLocation>
+        {
+            new TrainLocation { Latitude = 59.281008, Longitude = 25.624934, Timestamp = 1683384765 },
+            new TrainLocation { Latitude = 59.280712, Longitude = 25.625761, Timestamp = 1683384767 },
+            new TrainLocation { Latitude = 59.280427, Longitude = 25.626555, Timestamp = 1683384769 },
+            new TrainLocation { Latitude = 59.280112, Longitude = 25.627435, Timestamp = 1683384771 },
+            
+            // new TrainLocation { Latitude = 59.4193518, Longitude = 24.7646078, Timestamp = 1683384765 },
+            // new TrainLocation { Latitude = 59.4221988, Longitude = 24.77523, Timestamp = 1683384767 },
+            // new TrainLocation { Latitude = 59.4225997, Longitude = 24.776713, Timestamp = 1683384769 },
+            // new TrainLocation { Latitude = 59.4227689, Longitude = 24.777453, Timestamp = 1683384771 },
+        };
+
+        var targetTimestamp = trainLocations.Last().Timestamp + 2;
+        var predictedLocation = PredictLocation(trainLocations, targetTimestamp);
+        Console.WriteLine(" 1 " + predictedLocation.Item1);
+        Console.WriteLine(" 1 " + predictedLocation.Item2);
+        
+        // targetTimestamp = trainLocations.Last().Timestamp + 2;
+        // predictedLocation = SimplePredictor.PredictLocation(trainLocations, targetTimestamp);
+        // Console.WriteLine(" 1 " + predictedLocation.Item1);
+        // Console.WriteLine(" 1 " + predictedLocation.Item2);
     }
 }
