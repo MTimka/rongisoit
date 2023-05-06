@@ -313,6 +313,8 @@ public class PointUtils
                 // find next track
                 if (nextNodeIndex >= currentTrack.Count)
                 {
+                    break;
+                    
                     var foundTrack = false;
                     for (var i = 0; i < tracks.Count; i++)
                     {
@@ -354,6 +356,8 @@ public class PointUtils
                 // find next track
                 if (nextNodeIndex < 0)
                 {
+                    break;
+
                     var foundTrack = false;
                     for (var i = 0; i < tracks.Count; i++)
                     {

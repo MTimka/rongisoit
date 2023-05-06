@@ -378,7 +378,7 @@ public class GreeterService : Greeter.GreeterBase
 
                         if (m_trainLocationsCache.ContainsKey(trainId))
                         {
-                            if (m_trainLocationsCache[trainId].Count > 3)
+                            if (m_trainLocationsCache[trainId].Count > 4)
                             {
                                 m_trainLocationsCache[trainId].RemoveAt(0);
                             }
@@ -386,7 +386,7 @@ public class GreeterService : Greeter.GreeterBase
                             
                             // try to predict 
                             // if (false)
-                            if (m_trainLocationsCache[trainId].Count > 2)
+                            if (m_trainLocationsCache[trainId].Count > 3)
                             {
                                 // var tLocsMapped = m_trainLocationsCache[trainId]
                                     // .Select(x => Tuple.Create(x.Latitude, x.Longitude, x.Timestamp)).ToList();
