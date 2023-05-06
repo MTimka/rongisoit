@@ -342,8 +342,27 @@ public class GreeterService : Greeter.GreeterBase
                         var strDt = (string)jsonObject["asukoha_uuendus"];
                         
                         // Convert string to DateTimeOffset object
-                        DateTimeOffset dateTimeOffset = DateTimeOffset.ParseExact(strDt, "yyyy-MM-dd'T'HH:mm:ss.fff", CultureInfo.InvariantCulture);
+                        DateTimeOffset? dateTimeOffset = null;
+                        try
+                        {
+                            dateTimeOffset = DateTimeOffset.ParseExact(strDt, "yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture);
+                        }
+                        catch (Exception) { }
 
+                        if (dateTimeOffset == null)
+                        {
+                            try
+                            {
+                                dateTimeOffset = DateTimeOffset.ParseExact(strDt, "yyyy-MM-dd'T'HH:mm:ss.fff", CultureInfo.InvariantCulture);
+                            }
+                            catch (Exception) { }
+                        }
+
+                        if (dateTimeOffset == null)
+                        {
+                            throw Exception("cant convert '" + strDt + "' with  yyyy-MM-dd'T'HH:mm:ss nor yyyy-MM-dd'T'HH:mm:ss.fff");
+                        }
+                        
                         // Convert DateTimeOffset to Unix timestamp
                         long unixTimestamp = dateTimeOffset.ToUnixTimeMilliseconds();
                         double timestamp = unixTimestamp / 1000.0;
