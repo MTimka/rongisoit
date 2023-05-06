@@ -345,7 +345,7 @@ public class GreeterService : Greeter.GreeterBase
                         DateTimeOffset? dateTimeOffset = null;
                         try
                         {
-                            dateTimeOffset = DateTimeOffset.ParseExact(strDt, "yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture);
+                            dateTimeOffset = DateTimeOffset.ParseExact(strDt, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
                         }
                         catch (Exception) { }
 
@@ -353,14 +353,14 @@ public class GreeterService : Greeter.GreeterBase
                         {
                             try
                             {
-                                dateTimeOffset = DateTimeOffset.ParseExact(strDt, "yyyy-MM-dd'T'HH:mm:ss.fff", CultureInfo.InvariantCulture);
+                                dateTimeOffset = DateTimeOffset.ParseExact(strDt, "yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture);
                             }
                             catch (Exception) { }
                         }
 
                         if (dateTimeOffset == null)
                         {
-                            throw new Exception("cant convert '" + strDt + "' with  yyyy-MM-dd'T'HH:mm:ss nor yyyy-MM-dd'T'HH:mm:ss.fff");
+                            throw new Exception("cannot convert '" + strDt + "' with  yyyy-MM-dd HH:mm:ss nor yyyy-MM-dd HH:mm:ss.fff");
                         }
                         
                         // Convert DateTimeOffset to Unix timestamp
