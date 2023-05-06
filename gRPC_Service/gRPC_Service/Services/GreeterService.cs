@@ -317,7 +317,7 @@ public class GreeterService : Greeter.GreeterBase
     {
         Console.WriteLine($"GetData [] begin");
 
-        var predictor = new TrainLocationPredictor();
+        // var predictor = new TrainLocationPredictor();
         // PointUtils.g_bDebug = true;
 
         var interval = TimeSpan.FromMilliseconds(2000);
@@ -406,7 +406,7 @@ public class GreeterService : Greeter.GreeterBase
                                 
                                 double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + 10;
 
-                                var (r_lat, r_lon) = predictor.Predict(m_trainLocationsCache[trainId], Convert.ToInt64(ee_timestamp));
+                                var (r_lat, r_lon) = SimplePredictor.PredictLocation(m_trainLocationsCache[trainId], Convert.ToInt64(ee_timestamp));
                                 Console.WriteLine($"{tLoc.Latitude} {tLoc.Longitude}  r_lat {r_lat} r_lon {r_lon}");
                                 // var res = TrainLocationPredictor.PredictTrainLocationAtTimestamp(tLocsMapped, ee_timestamp);
 
