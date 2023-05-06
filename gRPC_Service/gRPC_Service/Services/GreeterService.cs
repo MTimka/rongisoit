@@ -404,7 +404,7 @@ public class GreeterService : Greeter.GreeterBase
                                 // long ee_unixTimestamp = estoniaTime.ToUnixTimeMilliseconds();
                                 // double ee_timestamp = ee_unixTimestamp / 1000.0;
                                 
-                                double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + 10;
+                                double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + 100;
 
                                 var (r_lat, r_lon) = SimplePredictor.PredictLocation(m_trainLocationsCache[trainId], Convert.ToInt64(ee_timestamp));
                                 Console.WriteLine($"{tLoc.Latitude} {tLoc.Longitude}  r_lat {r_lat} r_lon {r_lon}");
