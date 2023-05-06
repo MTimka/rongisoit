@@ -305,7 +305,8 @@ public class PointUtils
 
             secondsLeftToWalk -= timeToTravelDistance;
             currentLoc = Tuple.Create(latlon.Latitude, latlon.Longitude);
-
+            break;
+            
             if (movingNextOnTrack)
             {
                 nextNodeIndex += 1;
