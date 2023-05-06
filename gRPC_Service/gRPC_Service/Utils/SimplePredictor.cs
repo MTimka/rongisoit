@@ -18,7 +18,7 @@ public class SimplePredictor
 
             // Calculate time difference in seconds
             double timeDiff = targetTime - locationTime;
-            Console.WriteLine("timeDiff " + timeDiff);
+            // Console.WriteLine("timeDiff " + timeDiff);
 
             timestamps.Add(timeDiff);
             latitudes.Add((double)location.Latitude);
