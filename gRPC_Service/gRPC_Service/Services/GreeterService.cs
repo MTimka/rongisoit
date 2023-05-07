@@ -415,15 +415,18 @@ public class GreeterService : Greeter.GreeterBase
                                 Console.WriteLine($"{tLoc.Latitude} {tLoc.Longitude}  r_lat {r_lat} r_lon {r_lon}");
                                 // var res = TrainLocationPredictor.PredictTrainLocationAtTimestamp(tLocsMapped, ee_timestamp);
 
-                                var tLocU = new TrainLocation
-                                {
-                                    TrainId = trainId + "_pres",
-                                    Latitude = r_lat,
-                                    Longitude = r_lon,
-                                    Timestamp = ee_timestamp,
-                                };
+                                // var tLocU = new TrainLocation
+                                // {
+                                //     TrainId = trainId + "_pres",
+                                //     Latitude = r_lat,
+                                //     Longitude = r_lon,
+                                //     Timestamp = ee_timestamp,
+                                // };
+                                //
+                                // UpdateTrainLocationRaw(tLocU);
                                 
-                                UpdateTrainLocationRaw(tLocU);
+                                tLoc.PredLatitude = r_lat;
+                                tLoc.PredLongitude = r_lon;
                             }
 
                             UpdateTrainLocationRaw(tLoc);

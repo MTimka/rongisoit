@@ -49,6 +49,8 @@ message TrainLocation {
   double latitude = 2;
   double longitude = 3;
   double timestamp = 4;
+  double predLatitude = 5;
+  double predLongitude = 6;
 }
 
 message UserLocation {
