@@ -82,6 +82,11 @@ public class GreeterService : Greeter.GreeterBase
                 m_userRotations[key] + 180, 
                 10000
             );
+            
+            var (sp1, sp2) = TriangleHelper.FindTriangleSidePoints(
+                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+                pointToForward
+            );
 
             var doesIntersect1 = LineIntersectionChecker.DoLinesIntersect(
                 new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
@@ -96,8 +101,36 @@ public class GreeterService : Greeter.GreeterBase
                 new Utils.LatLng(request.Latitude, request.Longitude),
                 new Utils.LatLng(request.PredLatitude, request.PredLongitude)
             );
+            
+            var doesIntersectTopToLeft = LineIntersectionChecker.DoLinesIntersect(
+                pointToForward,
+                sp1,
+                new Utils.LatLng(request.Latitude, request.Longitude),
+                new Utils.LatLng(request.PredLatitude, request.PredLongitude)
+            );
+            
+            var doesIntersectLeftToBottom = LineIntersectionChecker.DoLinesIntersect(
+                sp1,
+                pointToBackward,
+                new Utils.LatLng(request.Latitude, request.Longitude),
+                new Utils.LatLng(request.PredLatitude, request.PredLongitude)
+            );
+            
+            var doesIntersectBottomToRight = LineIntersectionChecker.DoLinesIntersect(
+                pointToBackward,
+                sp2,
+                new Utils.LatLng(request.Latitude, request.Longitude),
+                new Utils.LatLng(request.PredLatitude, request.PredLongitude)
+            );
+            
+            var doesIntersectRightToTop = LineIntersectionChecker.DoLinesIntersect(
+                sp2,
+                pointToForward,
+                new Utils.LatLng(request.Latitude, request.Longitude),
+                new Utils.LatLng(request.PredLatitude, request.PredLongitude)
+            );
 
-            if (doesIntersect1 || doesIntersect2)
+            if (doesIntersect1 || doesIntersect2 || doesIntersectTopToLeft || doesIntersectLeftToBottom || doesIntersectBottomToRight || doesIntersectRightToTop)
             {
                 m_userEvents1[key].Set();
             }
@@ -180,31 +213,31 @@ public class GreeterService : Greeter.GreeterBase
         m_userRotations[request.Id] = request.Bearing;
 
         // just to test if we get same values as phone app that we use to dbg visually formulas
-        var key = request.Id;
-        if (m_userLocations.ContainsKey(key))
-        {
-            var pointToForward = DestinationPointCalculator.CalculateDestinationPoint(
-                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-                m_userRotations[key], 
-                30
-            );
-                
-            var pointToBackward = DestinationPointCalculator.CalculateDestinationPoint(
-                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-                m_userRotations[key] + 180, 
-                10
-            );
-
-            var (sp1, sp2) = TriangleHelper.FindTriangleSidePoints(
-                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-                pointToForward
-            );
-            
-            Console.WriteLine("pointToForward " + pointToForward.Latitude + " " + pointToForward.Longitude);
-            Console.WriteLine("pointToBackward " + pointToBackward.Latitude + " " + pointToBackward.Longitude);
-            Console.WriteLine("sp1 " + sp1.Latitude + " " + sp1.Longitude);
-            Console.WriteLine("sp2 " + sp2.Latitude + " " + sp2.Longitude);
-        }
+        // var key = request.Id;
+        // if (m_userLocations.ContainsKey(key))
+        // {
+        //     var pointToForward = DestinationPointCalculator.CalculateDestinationPoint(
+        //         new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+        //         m_userRotations[key], 
+        //         30
+        //     );
+        //         
+        //     var pointToBackward = DestinationPointCalculator.CalculateDestinationPoint(
+        //         new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+        //         m_userRotations[key] + 180, 
+        //         10
+        //     );
+        //
+        //     var (sp1, sp2) = TriangleHelper.FindTriangleSidePoints(
+        //         new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+        //         pointToForward
+        //     );
+        //     
+        //     Console.WriteLine("pointToForward " + pointToForward.Latitude + " " + pointToForward.Longitude);
+        //     Console.WriteLine("pointToBackward " + pointToBackward.Latitude + " " + pointToBackward.Longitude);
+        //     Console.WriteLine("sp1 " + sp1.Latitude + " " + sp1.Longitude);
+        //     Console.WriteLine("sp2 " + sp2.Latitude + " " + sp2.Longitude);
+        // }
 
         return Task.FromResult(new Response
         {
