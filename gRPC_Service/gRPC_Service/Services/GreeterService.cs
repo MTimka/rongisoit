@@ -71,26 +71,55 @@ public class GreeterService : Greeter.GreeterBase
                 continue;
             }
 
-            
-
-            var dist = m_userLocations[key].HaversineDistance(new LatLng
-                { Latitude = request.Latitude, Longitude = request.Longitude });
-
-            if (dist < m_userLocations[key].DistanceFromClosestTrain)
-            {
-                m_userLocations[key].DistanceFromClosestTrain = dist;
-
-                var radiusToCheck = 0.010; // in km
-                if (m_userRadius.ContainsKey(key))
-                {
-                    radiusToCheck = m_userRadius[key] / 1000.0; // convert meters to km
-                }
+            var pointToForward = DestinationPointCalculator.CalculateDestinationPoint(
+                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+                m_userRotations[key], 
+                30000
+            );
                 
-                if (m_userLocations[key].DistanceFromClosestTrain < radiusToCheck) // in km
-                {
-                    m_userEvents1[key].Set();
-                }
+            var pointToBackward = DestinationPointCalculator.CalculateDestinationPoint(
+                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+                m_userRotations[key] + 180, 
+                10000
+            );
+
+            var doesIntersect1 = LineIntersectionChecker.DoLinesIntersect(
+                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+                pointToForward,
+                new Utils.LatLng(request.Latitude, request.Longitude),
+                new Utils.LatLng(request.PredLatitude, request.PredLongitude)
+            );
+            
+            var doesIntersect2 = LineIntersectionChecker.DoLinesIntersect(
+                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+                pointToBackward,
+                new Utils.LatLng(request.Latitude, request.Longitude),
+                new Utils.LatLng(request.PredLatitude, request.PredLongitude)
+            );
+
+            if (doesIntersect1 || doesIntersect2)
+            {
+                m_userEvents1[key].Set();
             }
+
+            // var dist = m_userLocations[key].HaversineDistance(new LatLng
+            //     { Latitude = request.Latitude, Longitude = request.Longitude });
+            //
+            // if (dist < m_userLocations[key].DistanceFromClosestTrain)
+            // {
+            //     m_userLocations[key].DistanceFromClosestTrain = dist;
+            //
+            //     var radiusToCheck = 0.010; // in km
+            //     if (m_userRadius.ContainsKey(key))
+            //     {
+            //         radiusToCheck = m_userRadius[key] / 1000.0; // convert meters to km
+            //     }
+            //     
+            //     if (m_userLocations[key].DistanceFromClosestTrain < radiusToCheck) // in km
+            //     {
+            //         m_userEvents1[key].Set();
+            //     }
+            // }
 
             // Console.WriteLine($"UpdateTrainLocation [] {key} dist: {dist} ");
 
@@ -150,24 +179,25 @@ public class GreeterService : Greeter.GreeterBase
         
         m_userRotations[request.Id] = request.Bearing;
 
-        var key = request.Id;
-        if (m_userLocations.ContainsKey(key))
-        {
-            var pointToForward = DestinationPointCalculator.CalculateDestinationPoint(
-                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-                m_userRotations[key], 
-                30
-            );
-                
-            var pointToBackward = DestinationPointCalculator.CalculateDestinationPoint(
-                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-                m_userRotations[key] + 180, 
-                10
-            );
-            
-            Console.WriteLine("pointToForward " + pointToForward.Latitude + " " + pointToForward.Longitude);
-            Console.WriteLine("pointToBackward " + pointToBackward.Latitude + " " + pointToBackward.Longitude);
-        }
+        // just to test if we get same values as phone app that we use to dbg visually formulas
+        // var key = request.Id;
+        // if (m_userLocations.ContainsKey(key))
+        // {
+        //     var pointToForward = DestinationPointCalculator.CalculateDestinationPoint(
+        //         new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+        //         m_userRotations[key], 
+        //         30
+        //     );
+        //         
+        //     var pointToBackward = DestinationPointCalculator.CalculateDestinationPoint(
+        //         new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+        //         m_userRotations[key] + 180, 
+        //         10
+        //     );
+        //     
+        //     Console.WriteLine("pointToForward " + pointToForward.Latitude + " " + pointToForward.Longitude);
+        //     Console.WriteLine("pointToBackward " + pointToBackward.Latitude + " " + pointToBackward.Longitude);
+        // }
 
         return Task.FromResult(new Response
         {
