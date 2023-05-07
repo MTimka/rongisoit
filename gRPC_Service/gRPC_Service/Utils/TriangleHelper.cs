@@ -5,7 +5,7 @@ public class TriangleHelper
     public static (LatLng, LatLng) FindTriangleSidePoints(LatLng p1, LatLng p2)
     {
         // Calculate the distance between p1 and the side points (5 meters)
-        double sideDistance = 0.00008;
+        double sideDistance = 0.0001;
 
         // Calculate the bearing angle between p1 and p2
         double bearingAngle = Math.Atan2(p2.Latitude - p1.Latitude, p2.Longitude - p1.Longitude);
