@@ -4,42 +4,53 @@ public class LineIntersectionChecker
 {
     public static bool DoLinesIntersect(LatLng line1Start, LatLng line1End, LatLng line2Start, LatLng line2End)
     {
-        // Convert latitude and longitude values to radians
-        double line1StartLatRad = ToRadians(line1Start.Latitude);
-        double line1StartLonRad = ToRadians(line1Start.Longitude);
-        double line1EndLatRad = ToRadians(line1End.Latitude);
-        double line1EndLonRad = ToRadians(line1End.Longitude);
+        double x1 = line1Start.Longitude;
+        double y1 = line1Start.Latitude;
+        double x2 = line1End.Longitude;
+        double y2 = line1End.Latitude;
+        double x3 = line2Start.Longitude;
+        double y3 = line2Start.Latitude;
+        double x4 = line2End.Longitude;
+        double y4 = line2End.Latitude;
 
-        double line2StartLatRad = ToRadians(line2Start.Latitude);
-        double line2StartLonRad = ToRadians(line2Start.Longitude);
-        double line2EndLatRad = ToRadians(line2End.Latitude);
-        double line2EndLonRad = ToRadians(line2End.Longitude);
+        // Calculate the orientation of the lines
+        double orientation1 = CalculateOrientation(x1, y1, x2, y2);
+        double orientation2 = CalculateOrientation(x3, y3, x4, y4);
 
-        // Calculate differences between points
-        double deltaLat1 = line1EndLatRad - line1StartLatRad;
-        double deltaLon1 = line1EndLonRad - line1StartLonRad;
-        double deltaLat2 = line2EndLatRad - line2StartLatRad;
-        double deltaLon2 = line2EndLonRad - line2StartLonRad;
-
-        // Calculate cross product
-        double crossProduct = (deltaLon1 * deltaLat2) - (deltaLon2 * deltaLat1);
-
-        if (Math.Abs(crossProduct) < 1e-10) // Lines are parallel
+        // Check if the lines are parallel
+        if (orientation1 == orientation2)
             return false;
 
-        // Calculate line parameters
-        double s = ((line1StartLonRad - line2StartLonRad) * deltaLat2 - (line1StartLatRad - line2StartLatRad) * deltaLon2) / crossProduct;
-        double t = ((line1StartLonRad - line2StartLonRad) * deltaLat1 - (line1StartLatRad - line2StartLatRad) * deltaLon1) / crossProduct;
+        // Calculate the intersection point
+        double intersectionX, intersectionY;
+        CalculateIntersection(x1, y1, x2, y2, x3, y3, x4, y4, out intersectionX, out intersectionY);
 
-        // Check if intersection point lies within the line segments
-        if (s >= 0 && s <= 1 && t >= 0 && t <= 1)
-            return true;
-
-        return false;
+        // Check if the intersection point lies within both line segments
+        return IsPointOnLineSegment(x1, y1, x2, y2, intersectionX, intersectionY)
+            && IsPointOnLineSegment(x3, y3, x4, y4, intersectionX, intersectionY);
     }
 
-    private static double ToRadians(double degrees)
+    // Helper function to calculate the orientation of a line
+    private static double CalculateOrientation(double x1, double y1, double x2, double y2)
     {
-        return degrees * (Math.PI / 180.0);
+        return (y2 - y1) / (x2 - x1);
     }
+
+    // Helper function to calculate the intersection point of two lines
+    private static void CalculateIntersection(double x1, double y1, double x2, double y2,
+        double x3, double y3, double x4, double y4, out double intersectionX, out double intersectionY)
+    {
+        double denominator = ((x1 - x2) * (y3 - y4)) - ((y1 - y2) * (x3 - x4));
+
+        intersectionX = (((x1 * y2) - (y1 * x2)) * (x3 - x4) - (x1 - x2) * ((x3 * y4) - (y3 * x4))) / denominator;
+        intersectionY = (((x1 * y2) - (y1 * x2)) * (y3 - y4) - (y1 - y2) * ((x3 * y4) - (y3 * x4))) / denominator;
+    }
+
+    // Helper function to check if a point lies within a line segment
+    private static bool IsPointOnLineSegment(double x1, double y1, double x2, double y2, double pointX, double pointY)
+    {
+        return (pointX >= Math.Min(x1, x2) && pointX <= Math.Max(x1, x2)
+            && pointY >= Math.Min(y1, y2) && pointY <= Math.Max(y1, y2));
+    }
+
 }
