@@ -161,7 +161,7 @@ public class GreeterService : Greeter.GreeterBase
                 
             var pointToBackward = DestinationPointCalculator.CalculateDestinationPoint(
                 new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-                m_userRotations[key], 
+                m_userRotations[key] + 180, 
                 10
             );
             
