@@ -180,24 +180,31 @@ public class GreeterService : Greeter.GreeterBase
         m_userRotations[request.Id] = request.Bearing;
 
         // just to test if we get same values as phone app that we use to dbg visually formulas
-        // var key = request.Id;
-        // if (m_userLocations.ContainsKey(key))
-        // {
-        //     var pointToForward = DestinationPointCalculator.CalculateDestinationPoint(
-        //         new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-        //         m_userRotations[key], 
-        //         30
-        //     );
-        //         
-        //     var pointToBackward = DestinationPointCalculator.CalculateDestinationPoint(
-        //         new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-        //         m_userRotations[key] + 180, 
-        //         10
-        //     );
-        //     
-        //     Console.WriteLine("pointToForward " + pointToForward.Latitude + " " + pointToForward.Longitude);
-        //     Console.WriteLine("pointToBackward " + pointToBackward.Latitude + " " + pointToBackward.Longitude);
-        // }
+        var key = request.Id;
+        if (m_userLocations.ContainsKey(key))
+        {
+            var pointToForward = DestinationPointCalculator.CalculateDestinationPoint(
+                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+                m_userRotations[key], 
+                30
+            );
+                
+            var pointToBackward = DestinationPointCalculator.CalculateDestinationPoint(
+                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+                m_userRotations[key] + 180, 
+                10
+            );
+
+            var (sp1, sp2) = TriangleHelper.FindTriangleSidePoints(
+                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+                pointToForward
+            );
+            
+            Console.WriteLine("pointToForward " + pointToForward.Latitude + " " + pointToForward.Longitude);
+            Console.WriteLine("pointToBackward " + pointToBackward.Latitude + " " + pointToBackward.Longitude);
+            Console.WriteLine("sp1 " + pointToBackward.Latitude + " " + pointToBackward.Longitude);
+            Console.WriteLine("sp2 " + pointToBackward.Latitude + " " + pointToBackward.Longitude);
+        }
 
         return Task.FromResult(new Response
         {
