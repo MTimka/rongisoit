@@ -520,7 +520,7 @@ public class GreeterService : Greeter.GreeterBase
                                 // long ee_unixTimestamp = estoniaTime.ToUnixTimeMilliseconds();
                                 // double ee_timestamp = ee_unixTimestamp / 1000.0;
                                 
-                                double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + 10;
+                                double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + 20;
 
                                 // foreach (var loc in m_trainLocationsCache[trainId])
                                 // {
