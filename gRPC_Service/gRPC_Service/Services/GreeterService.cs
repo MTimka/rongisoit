@@ -202,8 +202,8 @@ public class GreeterService : Greeter.GreeterBase
             
             Console.WriteLine("pointToForward " + pointToForward.Latitude + " " + pointToForward.Longitude);
             Console.WriteLine("pointToBackward " + pointToBackward.Latitude + " " + pointToBackward.Longitude);
-            Console.WriteLine("sp1 " + pointToBackward.Latitude + " " + pointToBackward.Longitude);
-            Console.WriteLine("sp2 " + pointToBackward.Latitude + " " + pointToBackward.Longitude);
+            Console.WriteLine("sp1 " + sp1.Latitude + " " + sp1.Longitude);
+            Console.WriteLine("sp2 " + sp2.Latitude + " " + sp2.Longitude);
         }
 
         return Task.FromResult(new Response
