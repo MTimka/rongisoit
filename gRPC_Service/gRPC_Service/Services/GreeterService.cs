@@ -74,13 +74,13 @@ public class GreeterService : Greeter.GreeterBase
             var pointToForward = DestinationPointCalculator.CalculateDestinationPoint(
                 new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
                 m_userRotations[key], 
-                30
+                50
             );
                 
             var pointToBackward = DestinationPointCalculator.CalculateDestinationPoint(
                 new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
                 m_userRotations[key] + 180, 
-                10
+                20
             );
             
             var (sp1, sp2) = TriangleHelper.FindTriangleSidePoints(
