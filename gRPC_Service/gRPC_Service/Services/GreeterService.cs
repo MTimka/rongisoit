@@ -74,13 +74,13 @@ public class GreeterService : Greeter.GreeterBase
             var pointToForward = DestinationPointCalculator.CalculateDestinationPoint(
                 new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
                 m_userRotations[key], 
-                30000
+                30
             );
                 
             var pointToBackward = DestinationPointCalculator.CalculateDestinationPoint(
                 new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
                 m_userRotations[key] + 180, 
-                10000
+                10
             );
             
             var (sp1, sp2) = TriangleHelper.FindTriangleSidePoints(
@@ -473,7 +473,11 @@ public class GreeterService : Greeter.GreeterBase
 
                         if (dateTimeOffset == null)
                         {
-                            throw new Exception("cannot convert '" + strDt + "' with  yyyy-MM-dd HH:mm:ss nor yyyy-MM-dd HH:mm:ss.fff");
+                            Console.WriteLine("cannot convert '" + strDt +
+                                              "' with  yyyy-MM-dd HH:mm:ss nor yyyy-MM-dd HH:mm:ss.fff");
+                            continue;
+                            
+                            // throw new Exception("cannot convert '" + strDt + "' with  yyyy-MM-dd HH:mm:ss nor yyyy-MM-dd HH:mm:ss.fff");
                         }
                         
                         // Convert DateTimeOffset to Unix timestamp
