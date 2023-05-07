@@ -13,6 +13,7 @@ public class GreeterService : Greeter.GreeterBase
     private readonly ILogger<GreeterService> _logger;
 
     public static Dictionary<string, LatLng> m_userLocations = new Dictionary<string, LatLng>();
+    public static Dictionary<string, double> m_userRotations = new Dictionary<string, double>();
     public static Dictionary<string, double> m_userRadius = new Dictionary<string, double>();
     public static Dictionary<string, AutoResetEvent> m_userEvents1 = new Dictionary<string, AutoResetEvent>();
     public static Dictionary<string, AutoResetEvent> m_userEvents2 = new Dictionary<string, AutoResetEvent>();
@@ -128,6 +129,18 @@ public class GreeterService : Greeter.GreeterBase
         Console.WriteLine($"UpdateUserLocation [] {request.Id} {request.Latitude} {request.Longitude}");
         
         m_userLocations[request.Id] = new LatLng { Latitude = request.Latitude, Longitude = request.Longitude };
+
+        return Task.FromResult(new Response
+        {
+            Code = "OK"
+        });
+    }
+    
+    public override Task<Response> UpdateUserRotation(UserRotation request, ServerCallContext context)
+    {
+        Console.WriteLine($"UpdateUserRotation [] {request.Id} {request.Bearing}");
+        
+        m_userRotations[request.Id] = request.Bearing;
 
         return Task.FromResult(new Response
         {

@@ -17,6 +17,7 @@ service Greeter {
   // for client
   rpc SubscribeForImpact(SubscribeRequest) returns (stream Response);
   rpc UpdateUserLocation(UserLocation) returns (Response);
+  rpc UpdateUserRotation(UserRotation) returns (Response);
   rpc SubscribeForTrainLocationUpdates(SubscribeRequest) returns (stream TrainLocationUpdatesResponse);
   rpc UpdateUserImpactRadius(UserImpactRadiusRequest) returns (Response);
 
@@ -57,6 +58,11 @@ message UserLocation {
   string id = 1;
   double latitude = 2;
   double longitude = 3;
+}
+
+message UserRotation {
+  string id = 1;
+  double bearing = 2;
 }
 
 message Response {
