@@ -65,6 +65,14 @@ public class GreeterService : Greeter.GreeterBase
         // calculate impact distance for each user
         foreach (var key in m_userLocations.Keys)
         {
+            //  skip those user that haven't shared rotation with us yet
+            if (m_userRotations.ContainsKey(key)  == false)
+            {
+                continue;
+            }
+
+            
+
             var dist = m_userLocations[key].HaversineDistance(new LatLng
                 { Latitude = request.Latitude, Longitude = request.Longitude });
 
@@ -141,6 +149,25 @@ public class GreeterService : Greeter.GreeterBase
         Console.WriteLine($"UpdateUserRotation [] {request.Id} {request.Bearing}");
         
         m_userRotations[request.Id] = request.Bearing;
+
+        var key = request.Id;
+        if (m_userLocations.ContainsKey(key))
+        {
+            var pointToForward = DestinationPointCalculator.CalculateDestinationPoint(
+                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+                m_userRotations[key], 
+                30
+            );
+                
+            var pointToBackward = DestinationPointCalculator.CalculateDestinationPoint(
+                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+                m_userRotations[key], 
+                10
+            );
+            
+            Console.WriteLine("pointToForward " + pointToForward.Latitude + " " + pointToForward.Longitude);
+            Console.WriteLine("pointToBackward " + pointToBackward.Latitude + " " + pointToBackward.Longitude);
+        }
 
         return Task.FromResult(new Response
         {
