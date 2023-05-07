@@ -16,7 +16,7 @@ public class GreeterService : Greeter.GreeterBase
     public static Dictionary<string, double> m_userRadius = new Dictionary<string, double>();
     public static Dictionary<string, AutoResetEvent> m_userEvents1 = new Dictionary<string, AutoResetEvent>();
     public static Dictionary<string, AutoResetEvent> m_userEvents2 = new Dictionary<string, AutoResetEvent>();
-    public static Dictionary<string, LatLng> m_trainLocations = new Dictionary<string, LatLng>();
+    public static Dictionary<string, TrainLocation> m_trainLocations = new Dictionary<string, TrainLocation>();
     public static Dictionary<string, List<string>> m_userActiveTrains = new Dictionary<string, List<string>>();
 
     public static Dictionary<string, AutoResetEvent> m_userEvents3 = new Dictionary<string, AutoResetEvent>();
@@ -87,7 +87,7 @@ public class GreeterService : Greeter.GreeterBase
 
         }
 
-        m_trainLocations[request.TrainId] = new LatLng { Latitude = request.Latitude, Longitude = request.Longitude };
+        m_trainLocations[request.TrainId] = request.Clone();
     }
     
     public override Task<Response> UpdateTrainLocation(TrainLocation request, ServerCallContext context)
@@ -239,7 +239,9 @@ public class GreeterService : Greeter.GreeterBase
                         TrainId = key,
                         Latitude = it.Latitude,
                         Longitude = it.Longitude,
-                        IsAlive = true
+                        IsAlive = true,
+                        PredLatitude = it.PredLatitude,
+                        PredLongitude = it.PredLongitude
                     });
                 }
             }

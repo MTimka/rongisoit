@@ -72,6 +72,8 @@ message TrainLocationUpdatesResponse {
   double latitude = 2;
   double longitude = 3;
   bool isAlive = 4;
+  double predLatitude = 5;
+  double predLongitude = 6;
 }
 
 message RemoveActiveTrainRequest {
