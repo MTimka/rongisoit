@@ -318,7 +318,7 @@ public class TrainLocationPredictor
             if (distance < minDistance)
             {
                 minDistance = distance;
-                closestPoint = Tuple.Create(point.X, point.Y);
+                closestPoint = Tuple.Create(p.Item1, p.Item2);
             }
         }
 
