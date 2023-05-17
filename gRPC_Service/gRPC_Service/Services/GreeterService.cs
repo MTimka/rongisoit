@@ -12,8 +12,12 @@ public class GreeterService : Greeter.GreeterBase
 {
     private readonly ILogger<GreeterService> _logger;
 
-    public static Dictionary<string, LatLng> m_userLocations = new Dictionary<string, LatLng>();
-    public static Dictionary<string, double> m_userRotations = new Dictionary<string, double>();
+    private static double USER_FORWARD_SPEED_MULLER = 10;
+    private static double USER_BACKWARD_SPEED_MULLER = 5;
+    private static double USER_SIDE_SPEED_MULLER = 5;
+    
+    public static Dictionary<string, UserLocationResponse> m_userLocations = new Dictionary<string, UserLocationResponse>();
+    // public static Dictionary<string, double> m_userRotations = new Dictionary<string, double>();
     public static Dictionary<string, double> m_userRadius = new Dictionary<string, double>();
     public static Dictionary<string, AutoResetEvent> m_userEvents1 = new Dictionary<string, AutoResetEvent>();
     public static Dictionary<string, AutoResetEvent> m_userEvents2 = new Dictionary<string, AutoResetEvent>();
@@ -66,29 +70,11 @@ public class GreeterService : Greeter.GreeterBase
         foreach (var key in m_userLocations.Keys)
         {
             //  skip those user that haven't shared rotation with us yet
-            if (m_userRotations.ContainsKey(key)  == false)
-            {
-                continue;
-            }
-
+            // if (m_userRotations.ContainsKey(key)  == false)
+            // {
+            //     continue;
+            // }
             
-            var pointToForward = DestinationPointCalculator.CalculateDestinationPoint(
-                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-                m_userRotations[key], 
-                50000
-            );
-                
-            var pointToBackward = DestinationPointCalculator.CalculateDestinationPoint(
-                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-                m_userRotations[key] + 180, 
-                2000
-            );
-            
-            var (sp1, sp2) = TriangleHelper.FindTriangleSidePoints(
-                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-                pointToForward
-            );
-
             var lastLocation = new Utils.LatLng(request.Latitude, request.Longitude);
             
             foreach (var prediction in request.Predictions)
@@ -96,43 +82,43 @@ public class GreeterService : Greeter.GreeterBase
                 var currentLocation = new Utils.LatLng(prediction.Latitude, prediction.Longitude);
 
                 var doesIntersect1 = LineIntersectionChecker.DoLinesIntersect(
-                    new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-                    pointToForward,
+                    new Utils.LatLng(m_userLocations[key].Location.Latitude, m_userLocations[key].Location.Longitude),
+                    new Utils.LatLng(m_userLocations[key].Forward.Latitude, m_userLocations[key].Forward.Longitude),
                     lastLocation,
                     currentLocation
                 );
                 
                 var doesIntersect2 = LineIntersectionChecker.DoLinesIntersect(
-                    new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-                    pointToBackward,
+                    new Utils.LatLng(m_userLocations[key].Location.Latitude, m_userLocations[key].Location.Longitude),
+                    new Utils.LatLng(m_userLocations[key].Backward.Latitude, m_userLocations[key].Backward.Longitude),
                     lastLocation,
                     currentLocation
                 );
                 
                 var doesIntersectTopToLeft = LineIntersectionChecker.DoLinesIntersect(
-                    pointToForward,
-                    sp1,
+                    new Utils.LatLng(m_userLocations[key].Forward.Latitude, m_userLocations[key].Forward.Longitude),
+                    new Utils.LatLng(m_userLocations[key].Sp1.Latitude, m_userLocations[key].Sp1.Longitude),
                     lastLocation,
                     currentLocation
                 );
                 
                 var doesIntersectLeftToBottom = LineIntersectionChecker.DoLinesIntersect(
-                    sp1,
-                    pointToBackward,
+                    new Utils.LatLng(m_userLocations[key].Sp1.Latitude, m_userLocations[key].Sp1.Longitude),
+                    new Utils.LatLng(m_userLocations[key].Backward.Latitude, m_userLocations[key].Backward.Longitude),
                     lastLocation,
                     currentLocation
                 );
                 
                 var doesIntersectBottomToRight = LineIntersectionChecker.DoLinesIntersect(
-                    pointToBackward,
-                    sp2,
+                    new Utils.LatLng(m_userLocations[key].Backward.Latitude, m_userLocations[key].Backward.Longitude),
+                    new Utils.LatLng(m_userLocations[key].Sp2.Latitude, m_userLocations[key].Sp2.Longitude),
                     lastLocation,
                     currentLocation
                 );
                 
                 var doesIntersectRightToTop = LineIntersectionChecker.DoLinesIntersect(
-                    sp2,
-                    pointToForward,
+                    new Utils.LatLng(m_userLocations[key].Sp2.Latitude, m_userLocations[key].Sp2.Longitude),
+                    new Utils.LatLng(m_userLocations[key].Forward.Latitude, m_userLocations[key].Forward.Longitude),
                     lastLocation,
                     currentLocation
                 );
@@ -199,30 +185,60 @@ public class GreeterService : Greeter.GreeterBase
         // tell users to update locations
         foreach (var it in m_userEvents2)
         { it.Value.Set(); }
-        
+
         return Task.FromResult(new Response
         {
             Code = "OK"
         });
     }
 
-    public override Task<Response> UpdateUserLocation(UserLocation request, ServerCallContext context)
+    public override Task<UserLocationResponse> UpdateUserLocation(UserLocation request, ServerCallContext context)
     {
         Console.WriteLine($"UpdateUserLocation [] {request.Id} {request.Latitude} {request.Longitude}");
         
-        m_userLocations[request.Id] = new LatLng { Latitude = request.Latitude, Longitude = request.Longitude };
-
-        return Task.FromResult(new Response
+        var pointToForward = DestinationPointCalculator.CalculateDestinationPoint(
+            new Utils.LatLng(request.Latitude, request.Longitude),
+                request.AvgBearing, 
+                request.AvgSpeed * (USER_FORWARD_SPEED_MULLER * 1000)
+            );
+                
+        var pointToBackward = DestinationPointCalculator.CalculateDestinationPoint(
+                new Utils.LatLng(request.Latitude, request.Longitude),
+                request.AvgBearing + 180, 
+                request.AvgSpeed * (USER_BACKWARD_SPEED_MULLER * 1000)
+            );
+        
+        var pointSp1 = DestinationPointCalculator.CalculateDestinationPoint(
+            new Utils.LatLng(request.Latitude, request.Longitude),
+            request.AvgBearing + 90, 
+            request.AvgSpeed * (USER_SIDE_SPEED_MULLER * 1000)
+        );
+        
+        var pointSp2 = DestinationPointCalculator.CalculateDestinationPoint(
+            new Utils.LatLng(request.Latitude, request.Longitude),
+            request.AvgBearing - 90, 
+            request.AvgSpeed * (USER_SIDE_SPEED_MULLER * 1000)
+        );
+        
+        var res = new UserLocationResponse
         {
-            Code = "OK"
-        });
+            Location = new PLatLng { Latitude = request.Latitude, Longitude = request.Longitude },
+            Forward = new PLatLng { Latitude = pointToForward.Latitude, Longitude = pointToForward.Longitude },
+            Backward = new PLatLng { Latitude = pointToBackward.Latitude, Longitude = pointToBackward.Longitude },
+            Sp1 = new PLatLng { Latitude = pointSp1.Latitude, Longitude = pointSp1.Longitude },
+            Sp2 = new PLatLng { Latitude = pointSp2.Latitude, Longitude = pointSp2.Longitude },
+        };
+
+        m_userLocations[request.Id] = res;
+        
+        return Task.FromResult(res);
     }
     
     public override Task<Response> UpdateUserRotation(UserRotation request, ServerCallContext context)
     {
-        Console.WriteLine($"UpdateUserRotation [] {request.Id} {request.Bearing}");
+        Console.WriteLine($"UpdateUserRotation [] {request.Id} {request.Bearing} ignored");
         
-        m_userRotations[request.Id] = request.Bearing;
+        // m_userRotations[request.Id] = request.Bearing;
 
         // just to test if we get same values as phone app that we use to dbg visually formulas
         // var key = request.Id;
@@ -288,7 +304,7 @@ public class GreeterService : Greeter.GreeterBase
             if (false == m_userEvents1.ContainsKey(request.Id))
             { m_userEvents1[request.Id] = new AutoResetEvent(false); }
             
-            m_userLocations[request.Id].ResponseStream = responseStream;
+            // m_userLocations[request.Id].ResponseStream = responseStream;
 
             while (!context.CancellationToken.IsCancellationRequested)
             {
@@ -297,7 +313,7 @@ public class GreeterService : Greeter.GreeterBase
                 { break; }
                 
                 await responseStream.WriteAsync(new Response { Code = "IMPACT" });
-                m_userLocations[request.Id].DistanceFromClosestTrain = Double.MaxValue;
+                // m_userLocations[request.Id].DistanceFromClosestTrain = Double.MaxValue;
                 Console.WriteLine($"SubscribeForImpact [] {request.Id} will impact");
             }
         }
