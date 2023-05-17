@@ -27,7 +27,7 @@ public class TrainLocationPredictor
 {
     private List<List<Tuple<double, double>>> railways;
     private List<List<LatLng>> tracks;
-    private List<Tuple<BoundingBox, List<LatLng>>> boxedTracks;
+    private List<Tuple<BoundingBox, List<LatLng>>> boxedTracks =  new List<Tuple<BoundingBox, List<LatLng>>>();
     
     public TrainLocationPredictor()
     {
