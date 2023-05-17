@@ -120,7 +120,7 @@ public class TrainLocationPredictor
         var distance1 = CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, closestPoint.Latitude, closestPoint.Longitude);
         var distance2 = CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, extrapolatedLatitude, extrapolatedLongitude);
 
-        if (distance1 > distance2 || Math.Abs(distance1 - distance2) < 0.0002)
+        if (distance1 > distance2 || Math.Abs(distance1 - distance2) < 0.0003)
         {
             return Tuple.Create(closestPoint.Latitude, closestPoint.Longitude);
         }

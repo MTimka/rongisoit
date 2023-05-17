@@ -519,15 +519,21 @@ public class GreeterService : Greeter.GreeterBase
                                 // // Convert DateTimeOffset to Unix timestamp
                                 // long ee_unixTimestamp = estoniaTime.ToUnixTimeMilliseconds();
                                 // double ee_timestamp = ee_unixTimestamp / 1000.0;
-                                
-                                tLoc.Predictions.Clear();
 
+                                var trainLocationsToPredictOn = m_trainLocationsCache[trainId];
                                 double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + 1;
                                 double end_timestamp = ee_timestamp + 20;
                                 for (; ee_timestamp < end_timestamp; ee_timestamp += 1)
                                 {
                                     // var (r_lat, r_lon) = SimplePredictor.PredictLocation(m_trainLocationsCache[trainId], Convert.ToInt64(ee_timestamp));
-                                    var (r_lat, r_lon) = predictor.PredictLocation(m_trainLocationsCache[trainId], Convert.ToInt64(ee_timestamp));
+                                    var (r_lat, r_lon) = predictor.PredictLocation(trainLocationsToPredictOn, Convert.ToInt64(ee_timestamp));
+                                    trainLocationsToPredictOn.Add(new TrainLocation
+                                    {
+                                        Latitude = r_lat,
+                                        Longitude = r_lon,
+                                        Timestamp = ee_timestamp
+                                    });
+                                    
                                     tLoc.Predictions.Add(new PLatLng
                                     {
                                         Latitude = r_lat,
