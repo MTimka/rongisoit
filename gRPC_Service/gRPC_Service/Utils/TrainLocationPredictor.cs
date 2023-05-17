@@ -300,14 +300,21 @@ public class TrainLocationPredictor
         //     }
         // }
 
-        var radius = 0.001;
+        var radius = 0.01;
         
         var range = new BoundingBox(extrapolatedLatitude - radius, extrapolatedLongitude - radius, 2 * radius, 2 * radius);
         List<Point> pointsInRange = quadtree.QueryRange(range);
 
         foreach (var point in pointsInRange)
         {
-            var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point.X, point.Y);
+            Tuple<double, double> p = PointUtils.ClosestPointOnLine(
+                Tuple.Create(lastPoint.Latitude, lastPoint.Longitude),
+                Tuple.Create(point.X, point.Y),
+                Tuple.Create(extrapolatedLatitude, extrapolatedLongitude));
+            
+            // var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point.X, point.Y);
+            var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, p.Item1, p.Item2);
+            
             if (distance < minDistance)
             {
                 minDistance = distance;
