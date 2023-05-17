@@ -539,7 +539,7 @@ public class GreeterService : Greeter.GreeterBase
                                     var (r_lat, r_lon) = predictor.PredictLocation(trainLocationsToPredictOn, ee_timestamp);
                                     
                                     //  check  if prediction can travel that far
-                                    var distancePredicted = PointUtils.CalculateDistance(r_lat2, r_lon2, m_trainLocationsCache[trainId].Last().Latitude, m_trainLocationsCache[trainId].Last().Longitude);
+                                    var distancePredicted = PointUtils.CalculateDistance(r_lat, r_lon, m_trainLocationsCache[trainId].Last().Latitude, m_trainLocationsCache[trainId].Last().Longitude);
                                     totalDistanceTraveledInPrediction += distancePredicted;
                                     if (totalDistanceTraveledInPrediction > distanceToTravel)
                                     {
