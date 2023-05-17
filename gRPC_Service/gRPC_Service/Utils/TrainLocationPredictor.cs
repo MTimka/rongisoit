@@ -13,40 +13,43 @@ public class BoundingBox {
     
     public bool Intersects(double startLat, double startLon, double latitude, double longitude)
     {
-        // double minX = X;
-        // double minY = Y;
-        // double maxX = X + Width;
-        // double maxY = Y + Height;
-
-        var doesIntersectTop = LineIntersectionChecker.DoLinesIntersectRaw(
-            startLat, startLon,
-            latitude, longitude,
-            X, Y,
-            X + Width, Y
-        );
+        double minX = X;
+        double minY = Y;
+        double maxX = X + Width;
+        double maxY = Y + Height;
         
-        var doesIntersectRight = LineIntersectionChecker.DoLinesIntersectRaw(
-            startLat, startLon,
-            latitude, longitude,
-            X + Width, Y,
-            X + Width, Y + Height
-        );
-        
-        var doesIntersectBottom = LineIntersectionChecker.DoLinesIntersectRaw(
-            startLat, startLon,
-            latitude, longitude,
-            X + Width, Y + Height,
-            X, Y + Height
-        );
-        
-        var doesIntersectLeft = LineIntersectionChecker.DoLinesIntersectRaw(
-            startLat, startLon,
-            latitude, longitude,
-            X, Y + Height,
-            X, Y
-        );
-
-        return doesIntersectTop || doesIntersectRight || doesIntersectBottom || doesIntersectLeft;
+        return (longitude >= minX && longitude <= maxX)
+               && (latitude >= minY && latitude <= maxY);
+        //
+        // var doesIntersectTop = LineIntersectionChecker.DoLinesIntersectRaw(
+        //     startLat, startLon,
+        //     latitude, longitude,
+        //     X, Y,
+        //     X + Width, Y
+        // );
+        //
+        // var doesIntersectRight = LineIntersectionChecker.DoLinesIntersectRaw(
+        //     startLat, startLon,
+        //     latitude, longitude,
+        //     X + Width, Y,
+        //     X + Width, Y + Height
+        // );
+        //
+        // var doesIntersectBottom = LineIntersectionChecker.DoLinesIntersectRaw(
+        //     startLat, startLon,
+        //     latitude, longitude,
+        //     X + Width, Y + Height,
+        //     X, Y + Height
+        // );
+        //
+        // var doesIntersectLeft = LineIntersectionChecker.DoLinesIntersectRaw(
+        //     startLat, startLon,
+        //     latitude, longitude,
+        //     X, Y + Height,
+        //     X, Y
+        // );
+        //
+        // return doesIntersectTop || doesIntersectRight || doesIntersectBottom || doesIntersectLeft;
     }
 }
 
@@ -112,7 +115,8 @@ public class TrainLocationPredictor
         }
         
         Console.WriteLine("build quadtree ");
-        
+
+        double sizeInGps = 0.01;
         foreach (var track in tracks)
         {
             // get bounding box
@@ -129,10 +133,10 @@ public class TrainLocationPredictor
                 maxY = Math.Max(maxY, point.Longitude);
             }
 
-            double width = maxX - minX;
-            double height = maxY - minY;
-            double x = minX;
-            double y = minY;
+            double width = (maxX - minX) + sizeInGps;
+            double height = (maxY - minY) + sizeInGps;
+            double x = minX - sizeInGps;
+            double y = minY - sizeInGps;
 
             var bb = new BoundingBox { X = x, Y = y, Width = width, Height = height };
             boxedTracks.Add(Tuple.Create(bb, track));
