@@ -29,6 +29,38 @@ public class LineIntersectionChecker
         return IsPointOnLineSegment(x1, y1, x2, y2, intersectionX, intersectionY)
             && IsPointOnLineSegment(x3, y3, x4, y4, intersectionX, intersectionY);
     }
+    
+    public static bool DoLinesIntersectRaw(
+        double line1StartLat, double line1StartLon,
+        double line1EndLat, double line1EndLon, 
+        double line2StartLat, double line2StartLon, 
+        double line2EndLat, double line2EndLon)
+    {
+        double x1 = line1StartLat;
+        double y1 = line1StartLon;
+        double x2 = line1EndLat;
+        double y2 = line1EndLon;
+        double x3 = line2StartLat;
+        double y3 = line2StartLon;
+        double x4 = line2EndLat;
+        double y4 = line2EndLon;
+
+        // Calculate the orientation of the lines
+        double orientation1 = CalculateOrientation(x1, y1, x2, y2);
+        double orientation2 = CalculateOrientation(x3, y3, x4, y4);
+
+        // Check if the lines are parallel
+        if (orientation1 == orientation2)
+            return false;
+
+        // Calculate the intersection point
+        double intersectionX, intersectionY;
+        CalculateIntersection(x1, y1, x2, y2, x3, y3, x4, y4, out intersectionX, out intersectionY);
+
+        // Check if the intersection point lies within both line segments
+        return IsPointOnLineSegment(x1, y1, x2, y2, intersectionX, intersectionY)
+               && IsPointOnLineSegment(x3, y3, x4, y4, intersectionX, intersectionY);
+    }
 
     // Helper function to calculate the orientation of a line
     private static double CalculateOrientation(double x1, double y1, double x2, double y2)

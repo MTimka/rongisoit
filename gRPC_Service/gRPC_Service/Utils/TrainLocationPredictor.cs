@@ -11,26 +11,42 @@ public class BoundingBox {
     public double Width { get; set; }
     public double Height { get; set; }
     
-    public bool Intersects(double latitude, double longitude)
+    public bool Intersects(double startLat, double startLon, double latitude, double longitude)
     {
-        double minX = X;
-        double minY = Y;
-        double maxX = X + Width;
-        double maxY = Y + Height;
+        // double minX = X;
+        // double minY = Y;
+        // double maxX = X + Width;
+        // double maxY = Y + Height;
 
-        // Convert latitude and longitude to radians
-        double latRad = latitude * Math.PI / 180.0;
-        double lonRad = longitude * Math.PI / 180.0;
+        var doesIntersectTop = LineIntersectionChecker.DoLinesIntersectRaw(
+            startLat, startLon,
+            latitude, longitude,
+            X, Y,
+            X + Width, Y
+        );
+        
+        var doesIntersectRight = LineIntersectionChecker.DoLinesIntersectRaw(
+            startLat, startLon,
+            latitude, longitude,
+            X + Width, Y,
+            X + Width, Y + Height
+        );
+        
+        var doesIntersectBottom = LineIntersectionChecker.DoLinesIntersectRaw(
+            startLat, startLon,
+            latitude, longitude,
+            X + Width, Y + Height,
+            X, Y + Height
+        );
+        
+        var doesIntersectLeft = LineIntersectionChecker.DoLinesIntersectRaw(
+            startLat, startLon,
+            latitude, longitude,
+            X, Y + Height,
+            X, Y
+        );
 
-        // Earth radius in kilometers
-        double earthRadiusKm = 6371.0;
-
-        // Calculate the distance between the bounding box and the point
-        double dx = earthRadiusKm * Math.Cos(latRad) * (Math.Cos(lonRad) - Math.Cos(minY * Math.PI / 180.0));
-        double dy = earthRadiusKm * (Math.Sin(latRad) - Math.Sin(minX * Math.PI / 180.0));
-
-        return (dx >= 0 && dx <= Width)
-               && (dy >= 0 && dy <= Height);
+        return doesIntersectTop || doesIntersectRight || doesIntersectBottom || doesIntersectLeft;
     }
 }
 
@@ -39,9 +55,6 @@ public class TrainLocationPredictor
     private List<List<Tuple<double, double>>> railways;
     private List<List<LatLng>> tracks;
     private List<Tuple<BoundingBox, List<LatLng>>> boxedTracks =  new List<Tuple<BoundingBox, List<LatLng>>>();
-    
-    private const double EarthRadiusKm = 6371.0;
-
     
     public TrainLocationPredictor()
     {
@@ -103,48 +116,26 @@ public class TrainLocationPredictor
         foreach (var track in tracks)
         {
             // get bounding box
-            double minLat = double.MaxValue;
-            double minLon = double.MaxValue;
-            double maxLat = double.MinValue;
-            double maxLon = double.MinValue;
+            double minX = double.MaxValue;
+            double minY = double.MaxValue;
+            double maxX = double.MinValue;
+            double maxY = double.MinValue;
 
             foreach (var point in track)
             {
-                minLat = Math.Min(minLat, point.Latitude);
-                minLon = Math.Min(minLon, point.Longitude);
-                maxLat = Math.Max(maxLat, point.Latitude);
-                maxLon = Math.Max(maxLon, point.Longitude);
+                minX = Math.Min(minX, point.Latitude);
+                minY = Math.Min(minY, point.Longitude);
+                maxX = Math.Max(maxX, point.Latitude);
+                maxY = Math.Max(maxY, point.Longitude);
             }
 
-            // Convert the latitude and longitude to radians
-            double minLatRad = minLat * Math.PI / 180.0;
-            double maxLatRad = maxLat * Math.PI / 180.0;
-            double minLonRad = minLon * Math.PI / 180.0;
-            double maxLonRad = maxLon * Math.PI / 180.0;
+            double width = maxX - minX;
+            double height = maxY - minY;
+            double x = minX;
+            double y = minY;
 
-            // Calculate the distance between two points using the Haversine formula
-            double distanceLat = maxLatRad - minLatRad;
-            double distanceLon = maxLonRad - minLonRad;
-            double a = Math.Sin(distanceLat / 2) * Math.Sin(distanceLat / 2) +
-                       Math.Cos(minLatRad) * Math.Cos(maxLatRad) *
-                       Math.Sin(distanceLon / 2) * Math.Sin(distanceLon / 2);
-            double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-            double distance = EarthRadiusKm * c;
-
-            // Calculate the bounding box dimensions
-            double width = distance;
-            double height = distance;
-
-            // Calculate the center of the bounding box
-            double centerLat = (minLat + maxLat) / 2.0;
-            double centerLon = (minLon + maxLon) / 2.0;
-
-            // Calculate the top-left corner of the bounding box
-            double x = centerLat - (width / 2.0);
-            double y = centerLon - (height / 2.0);
-
-            BoundingBox boundingBox = new BoundingBox { X = x, Y = y, Width = width, Height = height };
-            boxedTracks.Add(Tuple.Create(boundingBox, track));
+            var bb = new BoundingBox { X = x, Y = y, Width = width, Height = height };
+            boxedTracks.Add(Tuple.Create(bb, track));
         }
         
     }
@@ -196,9 +187,10 @@ public class TrainLocationPredictor
 
         foreach (var boxedTrack in boxedTracks)
         {
-            if (boxedTrack.Item1.Intersects(extrapolatedLatitude, extrapolatedLongitude))
+            if (boxedTrack.Item1.Intersects(
+                    lastPoint.Latitude, lastPoint.Longitude,
+                    extrapolatedLatitude, extrapolatedLongitude))
             {
-                Console.WriteLine("itersection");
                 var track = boxedTrack.Item2;
                 
                 for (int i = 0; i < track.Count - 1; i++)
