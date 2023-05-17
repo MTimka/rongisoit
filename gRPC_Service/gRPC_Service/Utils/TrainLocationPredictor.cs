@@ -68,7 +68,7 @@ public class TrainLocationPredictor
         }
     }
 
-    public Tuple<double, double> PredictLocation(List<TrainLocation> trainLocations, double targetTimestamp, List<TrainLocation> Predictions)
+    public Tuple<double, double> PredictLocation(List<TrainLocation> trainLocations, double targetTimestamp)
     {
         // Extrapolate the location based on the rate of change between the last two known data points
 
