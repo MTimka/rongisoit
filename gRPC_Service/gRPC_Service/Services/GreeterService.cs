@@ -520,6 +520,8 @@ public class GreeterService : Greeter.GreeterBase
                                 // long ee_unixTimestamp = estoniaTime.ToUnixTimeMilliseconds();
                                 // double ee_timestamp = ee_unixTimestamp / 1000.0;
                                 
+                                tLoc.Predictions.Clear();
+
                                 double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + 1;
                                 double end_timestamp = ee_timestamp + 20;
                                 for (; ee_timestamp < end_timestamp; ee_timestamp += 1)
@@ -530,7 +532,6 @@ public class GreeterService : Greeter.GreeterBase
                                     {
                                         Latitude = r_lat,
                                         Longitude = r_lon,
-                                        
                                     });
                                 }
                             }
