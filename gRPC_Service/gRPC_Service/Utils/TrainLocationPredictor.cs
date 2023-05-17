@@ -32,7 +32,7 @@ public class Quadtree
 
 public class QuadtreeNode
 {
-    private const int MaxPointsPerNode = 10;
+    private const int MaxPointsPerNode = 100;
 
     private readonly BoundingBox boundary;
     private readonly List<Point> points;
@@ -313,7 +313,7 @@ public class TrainLocationPredictor
 
         var radius = 0.01;
         
-        var range = new BoundingBox(extrapolatedLatitude - radius, extrapolatedLongitude - radius, 2 * radius, 2 * radius);
+        var range = new BoundingBox(extrapolatedLatitude - radius, extrapolatedLongitude - radius, radius, radius);
         List<Point> pointsInRange = quadtree.QueryRange(range);
 
         foreach (var point in pointsInRange)
