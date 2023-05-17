@@ -5,6 +5,31 @@ namespace gRPC_Service.Utils;
 
 using System;
 
+
+public class BoundingBox
+{
+    public double MinLatitude { get; }
+    public double MaxLatitude { get; }
+    public double MinLongitude { get; }
+    public double MaxLongitude { get; }
+
+    public BoundingBox(double minLat, double maxLat, double minLon, double maxLon)
+    {
+        MinLatitude = minLat;
+        MaxLatitude = maxLat;
+        MinLongitude = minLon;
+        MaxLongitude = maxLon;
+    }
+
+    public bool Intersects(BoundingBox other)
+    {
+        return !(other.MinLongitude > MaxLongitude ||
+                 other.MaxLongitude < MinLongitude ||
+                 other.MinLatitude > MaxLatitude ||
+                 other.MaxLatitude < MinLatitude);
+    }
+}
+
 public class QuadTreeNode
 {
     public double MinLatitude { get; set; }
@@ -14,25 +39,33 @@ public class QuadTreeNode
     public QuadTreeNode[] Children { get; set; }
     public List<List<LatLng>> Tracks { get; set; }
 
+    public bool IsLeaf => Children == null;
+
+    // New property to store the bounding box of the node
+    public BoundingBox BoundingBox { get; }
+
     public QuadTreeNode(double minLat, double maxLat, double minLon, double maxLon)
     {
         MinLatitude = minLat;
         MaxLatitude = maxLat;
         MinLongitude = minLon;
         MaxLongitude = maxLon;
-        Children = new QuadTreeNode[4];
+        Children = null;
         Tracks = new List<List<LatLng>>();
+        BoundingBox = new BoundingBox(minLat, maxLat, minLon, maxLon);
     }
 
-    public bool ContainsPoint(double latitude, double longitude)
+    // New method to check if a bounding box intersects with the node's bounding box
+    public bool Intersects(BoundingBox boundingBox)
     {
-        return latitude >= MinLatitude && latitude <= MaxLatitude && longitude >= MinLongitude && longitude <= MaxLongitude;
+        return BoundingBox.Intersects(boundingBox);
     }
 }
 
 public class QuadTree
 {
     private QuadTreeNode root;
+    private const int MaxTracksPerNode = 10;
 
     public QuadTree(double minLat, double maxLat, double minLon, double maxLon)
     {
@@ -41,96 +74,89 @@ public class QuadTree
 
     public void Insert(List<LatLng> track)
     {
-        InsertRecursive(root, track);
+        InsertRecursive(root, track, root.BoundingBox);
     }
 
-    private void InsertRecursive(QuadTreeNode node, List<LatLng> track)
+    private void InsertRecursive(QuadTreeNode node, List<LatLng> track, BoundingBox boundingBox)
     {
-        if (node == null)
+        if (!node.Intersects(boundingBox))
             return;
 
-        if (Intersects(node, track))
+        if (node.IsLeaf)
         {
-            if (node.Children[0] == null)
+            node.Tracks.Add(track);
+
+            // Check if the node needs to split
+            if (node.Tracks.Count > MaxTracksPerNode)
             {
-                node.Tracks.Add(track);
-                return;
+                SplitNode(node);
+
+                // Re-insert the tracks into the new child nodes
+                foreach (var t in node.Tracks)
+                {
+                    foreach (var child in node.Children)
+                    {
+                        InsertRecursive(child, t, child.BoundingBox);
+                    }
+                }
+
+                node.Tracks.Clear(); // Clear the tracks in the parent node
             }
 
-            foreach (var child in node.Children)
-            {
-                InsertRecursive(child, track);
-            }
-        }
-    }
-
-    private bool Intersects(QuadTreeNode node, List<LatLng> track)
-    {
-        double nodeMinLat = node.MinLatitude;
-        double nodeMaxLat = node.MaxLatitude;
-        double nodeMinLon = node.MinLongitude;
-        double nodeMaxLon = node.MaxLongitude;
-
-        foreach (var point in track)
-        {
-            double lat = point.Latitude;
-            double lon = point.Longitude;
-
-            if (lat >= nodeMinLat && lat <= nodeMaxLat && lon >= nodeMinLon && lon <= nodeMaxLon)
-            {
-                return true;
-            }
+            return;
         }
 
-        return false;
+        foreach (var child in node.Children)
+        {
+            InsertRecursive(child, track, child.BoundingBox);
+        }
     }
 
     public List<List<LatLng>> FindTracksInRange(double centerLat, double centerLon, double range)
     {
         List<List<LatLng>> tracksInRange = new List<List<LatLng>>();
         double rangeSquared = range * range;
-        FindTracksRecursive(root, centerLat, centerLon, rangeSquared, tracksInRange);
+        BoundingBox rangeBoundingBox = new BoundingBox(centerLat - range, centerLat + range, centerLon - range, centerLon + range);
+        FindTracksRecursive(root, rangeBoundingBox, centerLat, centerLon, rangeSquared, tracksInRange);
         return tracksInRange;
     }
 
-    private void FindTracksRecursive(QuadTreeNode node, double centerLat, double centerLon, double rangeSquared,
-        List<List<LatLng>> result)
+    private void FindTracksRecursive(QuadTreeNode node, BoundingBox rangeBoundingBox, double centerLat, double centerLon, double rangeSquared, List<List<LatLng>> result)
     {
-        if (node == null)
+        if (!node.Intersects(rangeBoundingBox))
             return;
 
-        double nodeMinLat = node.MinLatitude;
-        double nodeMaxLat = node.MaxLatitude;
-        double nodeMinLon = node.MinLongitude;
-        double nodeMaxLon = node.MaxLongitude;
-
-        if (!IntersectsRange(centerLat, centerLon, rangeSquared, nodeMinLat, nodeMaxLat, nodeMinLon, nodeMaxLon))
-            return;
-
-        foreach (var track in node.Tracks)
+        if (node.IsLeaf)
         {
-            if (IsTrackWithinRange(track, centerLat, centerLon, rangeSquared))
+            foreach (var track in node.Tracks)
             {
-                result.Add(track);
+                if (IsTrackWithinRange(track, centerLat, centerLon, rangeSquared))
+                {
+                    result.Add(track);
+                }
             }
+
+            return;
         }
 
         foreach (var child in node.Children)
         {
-            FindTracksRecursive(child, centerLat, centerLon, rangeSquared, result);
+            FindTracksRecursive(child, rangeBoundingBox, centerLat, centerLon, rangeSquared, result);
         }
     }
 
-    private bool IntersectsRange(double centerLat, double centerLon, double rangeSquared, double nodeMinLat,
-        double nodeMaxLat, double nodeMinLon, double nodeMaxLon)
+    private void SplitNode(QuadTreeNode node)
     {
-        double closestLat = Math.Max(Math.Min(centerLat, nodeMaxLat), nodeMinLat);
-        double closestLon = Math.Max(Math.Min(centerLon, nodeMaxLon), nodeMinLon);
-        double distanceSquared = (closestLat - centerLat) * (closestLat - centerLat) +
-                                 (closestLon - centerLon) * (closestLon - centerLon);
-        return distanceSquared < rangeSquared;
-    }
+        double midLat = (node.MinLatitude + node.MaxLatitude) / 2;
+        double midLon = (node.MinLongitude + node.MaxLongitude) / 2;
 
+        node.Children = new QuadTreeNode[4];
+        node.Children[0] = new QuadTreeNode(node.MinLatitude, midLat, node.MinLongitude, midLon);
+        node.Children[1] = new QuadTreeNode(node.MinLatitude, midLat, midLon, node.MaxLongitude);
+        node.Children[2] = new QuadTreeNode(midLat, node.MaxLatitude, node.MinLongitude, midLon);
+        node.Children[3] = new QuadTreeNode(midLat, node.MaxLatitude, midLon, node.MaxLongitude);
+    }
+    
     private bool IsTrackWithinRange(List<LatLng> track, double centerLat, double centerLon, double rangeSquared)
     {
         foreach (var point in track)
