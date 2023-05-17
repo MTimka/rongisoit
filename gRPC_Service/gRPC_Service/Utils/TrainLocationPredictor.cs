@@ -5,155 +5,154 @@ namespace gRPC_Service.Utils;
 
 using System;
 
-
-public class Quadtree
+public class QuadTreeNode
 {
-    private const int MaxPointsPerNode = 10;
+    public double MinLatitude { get; set; }
+    public double MaxLatitude { get; set; }
+    public double MinLongitude { get; set; }
+    public double MaxLongitude { get; set; }
+    public QuadTreeNode[] Children { get; set; }
+    public List<List<LatLng>> Tracks { get; set; }
 
-    private readonly QuadtreeNode root;
-
-    public Quadtree(BoundingBox boundary)
+    public QuadTreeNode(double minLat, double maxLat, double minLon, double maxLon)
     {
-        root = new QuadtreeNode(boundary);
+        MinLatitude = minLat;
+        MaxLatitude = maxLat;
+        MinLongitude = minLon;
+        MaxLongitude = maxLon;
+        Children = new QuadTreeNode[4];
+        Tracks = new List<List<LatLng>>();
     }
 
-    public void Insert(Point point)
+    public bool ContainsPoint(double latitude, double longitude)
     {
-        root.Insert(point);
-    }
-
-    public List<Point> QueryRange(BoundingBox range)
-    {
-        var result = new List<Point>();
-        root.QueryRange(range, result);
-        return result;
+        return latitude >= MinLatitude && latitude <= MaxLatitude && longitude >= MinLongitude && longitude <= MaxLongitude;
     }
 }
 
-public class QuadtreeNode
+public class QuadTree
 {
-    private const int MaxPointsPerNode = 10;
+    private QuadTreeNode root;
 
-    private readonly BoundingBox boundary;
-    private readonly List<Point> points;
-    private QuadtreeNode[] children;
-
-    public QuadtreeNode(BoundingBox boundary)
+    public QuadTree(double minLat, double maxLat, double minLon, double maxLon)
     {
-        this.boundary = boundary;
-        points = new List<Point>();
-        children = null;
+        root = new QuadTreeNode(minLat, maxLat, minLon, maxLon);
     }
 
-    public void Insert(Point point)
+    public void Insert(List<LatLng> track)
     {
-        if (!boundary.Contains(point))
+        InsertRecursive(root, track);
+    }
+
+    private void InsertRecursive(QuadTreeNode node, List<LatLng> track)
+    {
+        if (node == null)
             return;
 
-        if (points.Count < MaxPointsPerNode)
+        if (Intersects(node, track))
         {
-            points.Add(point);
-        }
-        else
-        {
-            if (children == null)
-                Split();
+            if (node.Children[0] == null)
+            {
+                node.Tracks.Add(track);
+                return;
+            }
 
-            foreach (var child in children)
-                child.Insert(point);
+            foreach (var child in node.Children)
+            {
+                InsertRecursive(child, track);
+            }
         }
     }
 
-    private void Split()
+    private bool Intersects(QuadTreeNode node, List<LatLng> track)
     {
-        var subWidth = boundary.Width / 2;
-        var subHeight = boundary.Height / 2;
-        var x = boundary.X;
-        var y = boundary.Y;
+        double nodeMinLat = node.MinLatitude;
+        double nodeMaxLat = node.MaxLatitude;
+        double nodeMinLon = node.MinLongitude;
+        double nodeMaxLon = node.MaxLongitude;
 
-        children = new QuadtreeNode[4];
-        children[0] = new QuadtreeNode(new BoundingBox(x, y, subWidth, subHeight));
-        children[1] = new QuadtreeNode(new BoundingBox(x + subWidth, y, subWidth, subHeight));
-        children[2] = new QuadtreeNode(new BoundingBox(x, y + subHeight, subWidth, subHeight));
-        children[3] = new QuadtreeNode(new BoundingBox(x + subWidth, y + subHeight, subWidth, subHeight));
-
-        foreach (var point in points)
+        foreach (var point in track)
         {
-            foreach (var child in children)
+            double lat = point.Latitude;
+            double lon = point.Longitude;
+
+            if (lat >= nodeMinLat && lat <= nodeMaxLat && lon >= nodeMinLon && lon <= nodeMaxLon)
             {
-                if (child.boundary.Contains(point))
-                {
-                    child.Insert(point);
-                    break;
-                }
+                return true;
             }
         }
 
-        points.Clear();
+        return false;
     }
 
-    public void QueryRange(BoundingBox range, List<Point> result)
+    public List<List<LatLng>> FindTracksInRange(double centerLat, double centerLon, double range)
     {
-        if (!boundary.Intersects(range))
+        List<List<LatLng>> tracksInRange = new List<List<LatLng>>();
+        double rangeSquared = range * range;
+        FindTracksRecursive(root, centerLat, centerLon, rangeSquared, tracksInRange);
+        return tracksInRange;
+    }
+
+    private void FindTracksRecursive(QuadTreeNode node, double centerLat, double centerLon, double rangeSquared,
+        List<List<LatLng>> result)
+    {
+        if (node == null)
             return;
 
-        foreach (var point in points)
+        double nodeMinLat = node.MinLatitude;
+        double nodeMaxLat = node.MaxLatitude;
+        double nodeMinLon = node.MinLongitude;
+        double nodeMaxLon = node.MaxLongitude;
+
+        if (!IntersectsRange(centerLat, centerLon, rangeSquared, nodeMinLat, nodeMaxLat, nodeMinLon, nodeMaxLon))
+            return;
+
+        foreach (var track in node.Tracks)
         {
-            if (range.Contains(point))
-                result.Add(point);
+            if (IsTrackWithinRange(track, centerLat, centerLon, rangeSquared))
+            {
+                result.Add(track);
+            }
         }
 
-        if (children != null)
+        foreach (var child in node.Children)
         {
-            foreach (var child in children)
-                child.QueryRange(range, result);
+            FindTracksRecursive(child, centerLat, centerLon, rangeSquared, result);
         }
     }
-}
 
-public class BoundingBox
-{
-    public double X { get; }
-    public double Y { get; }
-    public double Width { get; }
-    public double Height { get; }
-
-    public BoundingBox(double x, double y, double width, double height)
+    private bool IntersectsRange(double centerLat, double centerLon, double rangeSquared, double nodeMinLat,
+        double nodeMaxLat, double nodeMinLon, double nodeMaxLon)
     {
-        X = x;
-        Y = y;
-        Width = width;
-        Height = height;
+        double closestLat = Math.Max(Math.Min(centerLat, nodeMaxLat), nodeMinLat);
+        double closestLon = Math.Max(Math.Min(centerLon, nodeMaxLon), nodeMinLon);
+        double distanceSquared = (closestLat - centerLat) * (closestLat - centerLat) +
+                                 (closestLon - centerLon) * (closestLon - centerLon);
+        return distanceSquared < rangeSquared;
     }
 
-    public bool Contains(Point point)
+    private bool IsTrackWithinRange(List<LatLng> track, double centerLat, double centerLon, double rangeSquared)
     {
-        return point.X >= X && point.X <= X + Width && point.Y >= Y && point.Y <= Y + Height;
-    }
+        foreach (var point in track)
+        {
+            double lat = point.Latitude;
+            double lon = point.Longitude;
+            double distanceSquared = (lat - centerLat) * (lat - centerLat) + (lon - centerLon) * (lon - centerLon);
+            if (distanceSquared <= rangeSquared)
+            {
+                return true;
+            }
+        }
 
-    public bool Intersects(BoundingBox other)
-    {
-        return X < other.X + other.Width && X + Width > other.X && Y < other.Y + other.Height && Y + Height > other.Y;
-    }
-}
-
-public class Point
-{
-    public double X { get; }
-    public double Y { get; }
-
-    public Point(double x, double y)
-    {
-        X = x;
-        Y = y;
+        return false;
     }
 }
 
 public class TrainLocationPredictor
 {
     private List<List<Tuple<double, double>>> railways;
-    private List<List<dynamic>> tracks;
-    private Quadtree quadtree;
+    private List<List<LatLng>> tracks;
+    private QuadTree quadtree;
     
     public TrainLocationPredictor()
     {
@@ -196,19 +195,13 @@ public class TrainLocationPredictor
 
         Console.WriteLine("railways len " + railways.Count);
         
-        tracks = new List<List<dynamic>>();
-        SpatialIndex<LatLng> index = new SpatialIndex<LatLng>();
-
+        tracks = new List<List<LatLng>>();
         foreach (List<Tuple<double, double>> track in railways)
         {
-            var res = new List<dynamic>();
+            var res = new List<LatLng>();
             foreach (Tuple<double, double> point in track)
             {
-                var pointDict = new 
-                {
-                    Latitude = point.Item1,
-                    Longitude = point.Item2
-                };
+                var pointDict = new LatLng(point.Item1, point.Item2);
                 res.Add(pointDict);
             }
             
@@ -217,20 +210,7 @@ public class TrainLocationPredictor
         
         Console.WriteLine("build quadtree ");
 
-        quadtree = new Quadtree(GetBoundaryOfAllTracks(tracks));
         
-        foreach (var track in tracks)
-        {
-            foreach (var point in track)
-            {
-                quadtree.Insert(new Point(point.Latitude, point.Longitude));
-            }
-        }
-        
-    }
-    
-    public BoundingBox GetBoundaryOfAllTracks(List<List<dynamic>> tracks)
-    {
         double minX = double.MaxValue;
         double minY = double.MaxValue;
         double maxX = double.MinValue;
@@ -251,8 +231,14 @@ public class TrainLocationPredictor
         double height = maxY - minY;
         double x = minX;
         double y = minY;
-
-        return new BoundingBox(x, y, width, height);
+        
+        quadtree = new QuadTree(x, width, y, height);
+        
+        foreach (var track in tracks)
+        {
+            quadtree.Insert(track);
+        }
+        
     }
 
     public Tuple<double, double> PredictLocation(List<TrainLocation> trainLocations, double targetTimestamp)
@@ -302,23 +288,47 @@ public class TrainLocationPredictor
 
         var radius = 0.01;
         
-        var range = new BoundingBox(extrapolatedLatitude - radius, extrapolatedLongitude - radius, 2 * radius, 2 * radius);
-        List<Point> pointsInRange = quadtree.QueryRange(range);
+        // var range = new BoundingBox(extrapolatedLatitude - radius, extrapolatedLongitude - radius, 2 * radius, 2 * radius);
+        // List<Point> pointsInRange = quadtree.QueryRange(range);
 
-        foreach (var point in pointsInRange)
+        List<List<LatLng>> tracksInRange = quadtree.FindTracksInRange(extrapolatedLatitude, extrapolatedLongitude, radius);
+        
+        // foreach (var point in tracksInRange)
+        // {
+        //     Tuple<double, double> p = PointUtils.ClosestPointOnLine(
+        //         Tuple.Create(lastPoint.Latitude, lastPoint.Longitude),
+        //         Tuple.Create(point.X, point.Y),
+        //         Tuple.Create(extrapolatedLatitude, extrapolatedLongitude));
+        //     
+        //     // var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point.X, point.Y);
+        //     var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, p.Item1, p.Item2);
+        //     
+        //     if (distance < minDistance)
+        //     {
+        //         minDistance = distance;
+        //         closestPoint = Tuple.Create(p.Item1, p.Item2);
+        //     }
+        // }
+        
+        foreach (var track in tracksInRange)
         {
-            Tuple<double, double> p = PointUtils.ClosestPointOnLine(
-                Tuple.Create(lastPoint.Latitude, lastPoint.Longitude),
-                Tuple.Create(point.X, point.Y),
-                Tuple.Create(extrapolatedLatitude, extrapolatedLongitude));
-            
-            // var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point.X, point.Y);
-            var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, p.Item1, p.Item2);
-            
-            if (distance < minDistance)
+            for (int i = 0; i < track.Count - 1; i++)
             {
-                minDistance = distance;
-                closestPoint = Tuple.Create(p.Item1, p.Item2);
+                var point1 = track[i];
+                var point2 = track[i+1];
+        
+                Tuple<double, double> point = PointUtils.ClosestPointOnLine(
+                    Tuple.Create(point1.Latitude, point1.Longitude),
+                    Tuple.Create(point2.Latitude, point2.Longitude),
+                    Tuple.Create(extrapolatedLatitude, extrapolatedLongitude));
+                
+                // var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point1.Latitude, point1.Longitude);
+                var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point.Item1, point.Item2);
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    closestPoint = point;
+                }
             }
         }
 
