@@ -198,6 +198,7 @@ public class TrainLocationPredictor
         {
             if (boxedTrack.Item1.Intersects(extrapolatedLatitude, extrapolatedLongitude))
             {
+                Console.WriteLine("itersection");
                 var track = boxedTrack.Item2;
                 
                 for (int i = 0; i < track.Count - 1; i++)
