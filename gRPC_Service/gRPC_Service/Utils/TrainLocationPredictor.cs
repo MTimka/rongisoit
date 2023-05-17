@@ -116,7 +116,7 @@ public class TrainLocationPredictor
         
         Console.WriteLine("build quadtree ");
 
-        double sizeInGps = 0.01;
+        double sizeInGps = 0.1;
         foreach (var track in tracks)
         {
             // get bounding box
