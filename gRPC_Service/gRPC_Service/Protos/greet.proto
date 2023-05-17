@@ -50,8 +50,7 @@ message TrainLocation {
   double latitude = 2;
   double longitude = 3;
   double timestamp = 4;
-  double predLatitude = 5;
-  double predLongitude = 6;
+  repeated PLatLng predictions = 5;
 }
 
 message UserLocation {
@@ -73,13 +72,17 @@ message SubscribeRequest {
   string id = 1;
 }
 
+message PLatLng {
+  double latitude = 1;
+  double longitude = 2;
+}
+
 message TrainLocationUpdatesResponse {
   string trainId = 1;
   double latitude = 2;
   double longitude = 3;
   bool isAlive = 4;
-  double predLatitude = 5;
-  double predLongitude = 6;
+  repeated PLatLng predictions = 5;
 }
 
 message RemoveActiveTrainRequest {

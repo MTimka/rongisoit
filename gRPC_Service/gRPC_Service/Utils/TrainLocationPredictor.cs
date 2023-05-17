@@ -68,33 +68,72 @@ public class TrainLocationPredictor
         }
     }
 
-    public Tuple<double, double> Predict(List<TrainLocation> trainLocations, long timestamp)
+    public Tuple<double, double> PredictLocation(List<TrainLocation> trainLocations, double targetTimestamp)
     {
-        var lastLoc = new
-        {
-            Latitude = trainLocations.Last().Latitude,
-            Longitude = trainLocations.Last().Longitude
-        };
+        // Extrapolate the location based on the rate of change between the last two known data points
+
+        // Get the last two known data points
+        var secondLastPoint = trainLocations[trainLocations.Count - 2];
+        var lastPoint = trainLocations[trainLocations.Count - 1];
+
+        // Calculate the time difference and the fraction of time passed
+        double timeDiff = lastPoint.Timestamp - secondLastPoint.Timestamp;
+        double fraction = (targetTimestamp - lastPoint.Timestamp) / timeDiff;
+
+        // Extrapolate the latitude and longitude
+        double latitudeDiff = lastPoint.Latitude - secondLastPoint.Latitude;
+        double longitudeDiff = lastPoint.Longitude - secondLastPoint.Longitude;
+
+        double extrapolatedLatitude = lastPoint.Latitude + fraction * latitudeDiff;
+        double extrapolatedLongitude = lastPoint.Longitude + fraction * longitudeDiff;
+
+        // return Tuple.Create(extrapolatedLatitude, extrapolatedLongitude);
         
-        var (closestTrack, closest_track_index) = PointUtils.GetClosestTract(lastLoc, railways);
-        
-        var trainLocationsC = new List<dynamic>();
-        foreach (var item in trainLocations)
+        // Find the closest point on any track to the extrapolated location
+        dynamic closestPoint = null;
+        var minDistance = double.PositiveInfinity;
+
+        foreach (var track in tracks)
         {
-            var res = new
+            for (int i = 0; i < track.Count - 1; i++)
             {
-                Latitude = item.Latitude,
-                Longitude = item.Longitude,
-                timestamp = Convert.ToInt64(item.Timestamp)
-            };
-            
-            trainLocationsC.Add(res);
+                var point1 = track[i];
+                var point2 = track[i + 1];
+
+                var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point1.Latitude, point1.Longitude);
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    closestPoint = point1;
+                }
+
+                // Check if the extrapolated location is closer to the end of a track and the start of the next track
+                distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point2.Latitude, point2.Longitude);
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    closestPoint = point2;
+                }
+            }
         }
 
-        var estimatedLocation =
-            PointUtils.TrackWalker(tracks, trainLocationsC, closest_track_index, timestamp);
+        var distance1 = CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, closestPoint.Latitude, closestPoint.Longitude);
+        var distance2 = CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, extrapolatedLatitude, extrapolatedLongitude);
 
-        return estimatedLocation;
+        if (distance1 > distance2)
+        {
+            return Tuple.Create(closestPoint.Latitude, closestPoint.Longitude);
+        }
+        
+        return Tuple.Create(extrapolatedLatitude, extrapolatedLongitude);
+    }
+    
+    public static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+    {
+        // Calculate the distance between two latitude-longitude coordinates
+        // You can use the Haversine formula or any other distance calculation method
+        // Here's a simple example using the Euclidean distance
+        return Math.Sqrt(Math.Pow(lat2 - lat1, 2) + Math.Pow(lon2 - lon1, 2));
     }
     
 }

@@ -71,69 +71,70 @@ public class GreeterService : Greeter.GreeterBase
                 continue;
             }
 
-            var pointToForward = DestinationPointCalculator.CalculateDestinationPoint(
-                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-                m_userRotations[key], 
-                50
-            );
-                
-            var pointToBackward = DestinationPointCalculator.CalculateDestinationPoint(
-                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-                m_userRotations[key] + 180, 
-                20
-            );
             
-            var (sp1, sp2) = TriangleHelper.FindTriangleSidePoints(
-                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-                pointToForward
-            );
-
-            var doesIntersect1 = LineIntersectionChecker.DoLinesIntersect(
-                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-                pointToForward,
-                new Utils.LatLng(request.Latitude, request.Longitude),
-                new Utils.LatLng(request.PredLatitude, request.PredLongitude)
-            );
-            
-            var doesIntersect2 = LineIntersectionChecker.DoLinesIntersect(
-                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-                pointToBackward,
-                new Utils.LatLng(request.Latitude, request.Longitude),
-                new Utils.LatLng(request.PredLatitude, request.PredLongitude)
-            );
-            
-            var doesIntersectTopToLeft = LineIntersectionChecker.DoLinesIntersect(
-                pointToForward,
-                sp1,
-                new Utils.LatLng(request.Latitude, request.Longitude),
-                new Utils.LatLng(request.PredLatitude, request.PredLongitude)
-            );
-            
-            var doesIntersectLeftToBottom = LineIntersectionChecker.DoLinesIntersect(
-                sp1,
-                pointToBackward,
-                new Utils.LatLng(request.Latitude, request.Longitude),
-                new Utils.LatLng(request.PredLatitude, request.PredLongitude)
-            );
-            
-            var doesIntersectBottomToRight = LineIntersectionChecker.DoLinesIntersect(
-                pointToBackward,
-                sp2,
-                new Utils.LatLng(request.Latitude, request.Longitude),
-                new Utils.LatLng(request.PredLatitude, request.PredLongitude)
-            );
-            
-            var doesIntersectRightToTop = LineIntersectionChecker.DoLinesIntersect(
-                sp2,
-                pointToForward,
-                new Utils.LatLng(request.Latitude, request.Longitude),
-                new Utils.LatLng(request.PredLatitude, request.PredLongitude)
-            );
-
-            if (doesIntersect1 || doesIntersect2 || doesIntersectTopToLeft || doesIntersectLeftToBottom || doesIntersectBottomToRight || doesIntersectRightToTop)
-            {
-                m_userEvents1[key].Set();
-            }
+            // var pointToForward = DestinationPointCalculator.CalculateDestinationPoint(
+            //     new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+            //     m_userRotations[key], 
+            //     50
+            // );
+            //     
+            // var pointToBackward = DestinationPointCalculator.CalculateDestinationPoint(
+            //     new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+            //     m_userRotations[key] + 180, 
+            //     20
+            // );
+            //
+            // var (sp1, sp2) = TriangleHelper.FindTriangleSidePoints(
+            //     new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+            //     pointToForward
+            // );
+            //
+            // var doesIntersect1 = LineIntersectionChecker.DoLinesIntersect(
+            //     new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+            //     pointToForward,
+            //     new Utils.LatLng(request.Latitude, request.Longitude),
+            //     new Utils.LatLng(request.PredLatitude, request.PredLongitude)
+            // );
+            //
+            // var doesIntersect2 = LineIntersectionChecker.DoLinesIntersect(
+            //     new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+            //     pointToBackward,
+            //     new Utils.LatLng(request.Latitude, request.Longitude),
+            //     new Utils.LatLng(request.PredLatitude, request.PredLongitude)
+            // );
+            //
+            // var doesIntersectTopToLeft = LineIntersectionChecker.DoLinesIntersect(
+            //     pointToForward,
+            //     sp1,
+            //     new Utils.LatLng(request.Latitude, request.Longitude),
+            //     new Utils.LatLng(request.PredLatitude, request.PredLongitude)
+            // );
+            //
+            // var doesIntersectLeftToBottom = LineIntersectionChecker.DoLinesIntersect(
+            //     sp1,
+            //     pointToBackward,
+            //     new Utils.LatLng(request.Latitude, request.Longitude),
+            //     new Utils.LatLng(request.PredLatitude, request.PredLongitude)
+            // );
+            //
+            // var doesIntersectBottomToRight = LineIntersectionChecker.DoLinesIntersect(
+            //     pointToBackward,
+            //     sp2,
+            //     new Utils.LatLng(request.Latitude, request.Longitude),
+            //     new Utils.LatLng(request.PredLatitude, request.PredLongitude)
+            // );
+            //
+            // var doesIntersectRightToTop = LineIntersectionChecker.DoLinesIntersect(
+            //     sp2,
+            //     pointToForward,
+            //     new Utils.LatLng(request.Latitude, request.Longitude),
+            //     new Utils.LatLng(request.PredLatitude, request.PredLongitude)
+            // );
+            //
+            // if (doesIntersect1 || doesIntersect2 || doesIntersectTopToLeft || doesIntersectLeftToBottom || doesIntersectBottomToRight || doesIntersectRightToTop)
+            // {
+            //     m_userEvents1[key].Set();
+            // }
 
             // var dist = m_userLocations[key].HaversineDistance(new LatLng
             //     { Latitude = request.Latitude, Longitude = request.Longitude });
@@ -350,8 +351,7 @@ public class GreeterService : Greeter.GreeterBase
                         Latitude = it.Latitude,
                         Longitude = it.Longitude,
                         IsAlive = true,
-                        PredLatitude = it.PredLatitude,
-                        PredLongitude = it.PredLongitude
+                        Predictions = { it.Predictions }
                     });
                 }
             }
@@ -429,7 +429,7 @@ public class GreeterService : Greeter.GreeterBase
     {
         Console.WriteLine($"GetData [] begin");
 
-        // var predictor = new TrainLocationPredictor();
+        var predictor = new TrainLocationPredictor();
         // PointUtils.g_bDebug = true;
 
         var interval = TimeSpan.FromMilliseconds(2000);
@@ -520,29 +520,19 @@ public class GreeterService : Greeter.GreeterBase
                                 // long ee_unixTimestamp = estoniaTime.ToUnixTimeMilliseconds();
                                 // double ee_timestamp = ee_unixTimestamp / 1000.0;
                                 
-                                double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + 20;
-
-                                // foreach (var loc in m_trainLocationsCache[trainId])
-                                // {
-                                //     Console.WriteLine("1 " + loc.Latitude + " " + loc.Longitude + " " + loc.Timestamp);
-                                // }
-
-                                var (r_lat, r_lon) = SimplePredictor.PredictLocation(m_trainLocationsCache[trainId], Convert.ToInt64(ee_timestamp));
-                                Console.WriteLine($"{tLoc.Latitude} {tLoc.Longitude}  r_lat {r_lat} r_lon {r_lon}");
-                                // var res = TrainLocationPredictor.PredictTrainLocationAtTimestamp(tLocsMapped, ee_timestamp);
-
-                                // var tLocU = new TrainLocation
-                                // {
-                                //     TrainId = trainId + "_pres",
-                                //     Latitude = r_lat,
-                                //     Longitude = r_lon,
-                                //     Timestamp = ee_timestamp,
-                                // };
-                                //
-                                // UpdateTrainLocationRaw(tLocU);
-                                
-                                tLoc.PredLatitude = r_lat;
-                                tLoc.PredLongitude = r_lon;
+                                double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + 1;
+                                double end_timestamp = ee_timestamp + 20;
+                                for (; ee_timestamp < end_timestamp; ee_timestamp += 1)
+                                {
+                                    // var (r_lat, r_lon) = SimplePredictor.PredictLocation(m_trainLocationsCache[trainId], Convert.ToInt64(ee_timestamp));
+                                    var (r_lat, r_lon) = predictor.PredictLocation(m_trainLocationsCache[trainId], Convert.ToInt64(ee_timestamp));
+                                    tLoc.Predictions.Add(new PLatLng
+                                    {
+                                        Latitude = r_lat,
+                                        Longitude = r_lon,
+                                        
+                                    });
+                                }
                             }
 
                             UpdateTrainLocationRaw(tLoc);

@@ -24,26 +24,4 @@ public class SimplePredictor
         return Tuple.Create(extrapolatedLatitude, extrapolatedLongitude);
     }
 
-    private static double LinearRegressionModel(List<double> y, List<double> x)
-    {
-        double sumX = 0.0;
-        double sumY = 0.0;
-        double sumXY = 0.0;
-        double sumX2 = 0.0;
-
-        int n = y.Count;
-
-        for (int i = 0; i < n; i++)
-        {
-            sumX += x[i];
-            sumY += y[i];
-            sumXY += x[i] * y[i];
-            sumX2 += x[i] * x[i];
-        }
-
-        double slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-        double intercept = (sumY - slope * sumX) / n;
-
-        return slope * x[n - 1] + intercept; // Predict the value at the last timestamp
-    }
 }
