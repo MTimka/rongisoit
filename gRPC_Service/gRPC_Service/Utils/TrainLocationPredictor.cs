@@ -18,8 +18,8 @@ public class BoundingBox {
         double maxX = X + Width;
         double maxY = Y + Height;
         
-        return (longitude >= minX && longitude <= maxX)
-               && (latitude >= minY && latitude <= maxY);
+        return (latitude >= minX && latitude <= maxX)
+               && (longitude >= minY && longitude <= maxY);
         //
         // var doesIntersectTop = LineIntersectionChecker.DoLinesIntersectRaw(
         //     startLat, startLon,
