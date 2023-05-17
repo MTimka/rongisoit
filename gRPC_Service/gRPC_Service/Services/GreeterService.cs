@@ -195,6 +195,11 @@ public class GreeterService : Greeter.GreeterBase
     public override Task<UserLocationResponse> UpdateUserLocation(UserLocation request, ServerCallContext context)
     {
         Console.WriteLine($"UpdateUserLocation [] {request.Id} {request.Latitude} {request.Longitude}");
+
+        if (request.AvgSpeed < 0.0005)
+        {
+            request.AvgSpeed = 0.0005;
+        }
         
         var pointToForward = DestinationPointCalculator.CalculateDestinationPoint(
             new Utils.LatLng(request.Latitude, request.Longitude),
