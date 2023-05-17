@@ -525,7 +525,7 @@ public class GreeterService : Greeter.GreeterBase
                                 
                                 double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + 1;
                                 double end_timestamp = ee_timestamp + 20;
-                                for (; ee_timestamp < end_timestamp; ee_timestamp += 5)
+                                for (; ee_timestamp < end_timestamp; ee_timestamp += 1)
                                 {
                                     // var (r_lat, r_lon) = SimplePredictor.PredictLocation(m_trainLocationsCache[trainId], Convert.ToInt64(ee_timestamp));
                                     var (r_lat, r_lon) = predictor.PredictLocation(trainLocationsToPredictOn, ee_timestamp);
