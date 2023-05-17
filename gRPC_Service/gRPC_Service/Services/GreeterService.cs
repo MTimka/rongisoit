@@ -531,7 +531,7 @@ public class GreeterService : Greeter.GreeterBase
                                 var distanceToTravel = PointUtils.CalculateDistance(r_lat2, r_lon2, m_trainLocationsCache[trainId].Last().Latitude, m_trainLocationsCache[trainId].Last().Longitude);
                                 double totalDistanceTraveledInPrediction = 0;
 
-                                double timestampStep = 300.0;
+                                double timestampStep = 1000.0;
                                 double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + timestampStep;
                                 double end_timestamp = ee_timestamp + timeToPredict;
                                 for (; ee_timestamp < end_timestamp; ee_timestamp += timestampStep)
