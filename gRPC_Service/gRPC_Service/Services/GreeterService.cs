@@ -522,6 +522,14 @@ public class GreeterService : Greeter.GreeterBase
 
                                 var trainLocationsToPredictOn = new List<TrainLocation>();
                                 trainLocationsToPredictOn.AddRange(m_trainLocationsCache[trainId]);
+
+                                double timeToPredict = 20;
+                                var (r_lat2, r_lon2) = predictor.PredictLocation(
+                                    trainLocationsToPredictOn, 
+                                    m_trainLocationsCache[trainId].Last().Timestamp  + timeToPredict,
+                                    deep: false);
+                                var distanceToTravel = PointUtils.CalculateDistance(r_lat2, r_lon2, m_trainLocationsCache[trainId].Last().Latitude, m_trainLocationsCache[trainId].Last().Longitude);
+                                double totalDistanceTraveledInPrediction = 0;
                                 
                                 double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + 1;
                                 double end_timestamp = ee_timestamp + 20;
@@ -529,6 +537,15 @@ public class GreeterService : Greeter.GreeterBase
                                 {
                                     // var (r_lat, r_lon) = SimplePredictor.PredictLocation(m_trainLocationsCache[trainId], Convert.ToInt64(ee_timestamp));
                                     var (r_lat, r_lon) = predictor.PredictLocation(trainLocationsToPredictOn, ee_timestamp);
+                                    
+                                    //  check  if prediction can travel that far
+                                    var distancePredicted = PointUtils.CalculateDistance(r_lat2, r_lon2, m_trainLocationsCache[trainId].Last().Latitude, m_trainLocationsCache[trainId].Last().Longitude);
+                                    totalDistanceTraveledInPrediction += distancePredicted;
+                                    if (totalDistanceTraveledInPrediction > distanceToTravel)
+                                    {
+                                        break;
+                                    }
+                                    
                                     trainLocationsToPredictOn.Add(new TrainLocation
                                     {
                                         Latitude = r_lat,

@@ -144,7 +144,7 @@ public class TrainLocationPredictor
         
     }
 
-    public Tuple<double, double> PredictLocation(List<TrainLocation> trainLocations, double targetTimestamp)
+    public Tuple<double, double> PredictLocation(List<TrainLocation> trainLocations, double targetTimestamp, bool deep = true)
     {
         // Extrapolate the location based on the rate of change between the last two known data points
 
@@ -163,6 +163,11 @@ public class TrainLocationPredictor
         double extrapolatedLatitude = lastPoint.Latitude + fraction * latitudeDiff;
         double extrapolatedLongitude = lastPoint.Longitude + fraction * longitudeDiff;
 
+        if (deep == false)
+        {
+            return Tuple.Create(extrapolatedLatitude, extrapolatedLongitude);
+        }
+        
         // Find the closest point on any track to the extrapolated location
         Tuple<double, double> closestPoint = null;
         var minDistance = double.PositiveInfinity;

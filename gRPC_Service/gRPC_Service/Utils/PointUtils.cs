@@ -463,4 +463,29 @@ public class PointUtils
     {
         return Math.Abs(lat1 - lat2) + Math.Abs(lon1 - lon2);
     }
+    
+    public static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+    {
+        // Convert latitude and longitude to radians
+        double lat1Rad = lat1 * Math.PI / 180.0;
+        double lon1Rad = lon1 * Math.PI / 180.0;
+        double lat2Rad = lat2 * Math.PI / 180.0;
+        double lon2Rad = lon2 * Math.PI / 180.0;
+
+        // Earth radius in kilometers
+        double earthRadiusKm = 6371.0;
+
+        // Calculate the differences in latitude and longitude
+        double dLat = lat2Rad - lat1Rad;
+        double dLon = lon2Rad - lon1Rad;
+
+        // Apply the Haversine formula
+        double a = Math.Sin(dLat / 2.0) * Math.Sin(dLat / 2.0) +
+                   Math.Cos(lat1Rad) * Math.Cos(lat2Rad) *
+                   Math.Sin(dLon / 2.0) * Math.Sin(dLon / 2.0);
+        double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+        double distance = earthRadiusKm * c;
+
+        return distance;
+    }
 }
