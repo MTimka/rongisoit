@@ -223,17 +223,17 @@ public class TrainLocationPredictor
             return Tuple.Create(extrapolatedLatitude, extrapolatedLongitude);
         }
         
-        var distance1 = CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, closestPoint.Item1, closestPoint.Item2);
-        var distance2 = CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, extrapolatedLatitude, extrapolatedLongitude);
+        // var distance1 = CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, closestPoint.Item1, closestPoint.Item2);
+        // var distance2 = CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, extrapolatedLatitude, extrapolatedLongitude);
+        //
+        // if (distance1 > distance2 || Math.Abs(distance1 - distance2) < 0.0003)
+        // {
+        //     return Tuple.Create(closestPoint.Item1, closestPoint.Item2);
+        // }
+        //
+        // return Tuple.Create(extrapolatedLatitude, extrapolatedLongitude);
         
-        if (distance1 > distance2 || Math.Abs(distance1 - distance2) < 0.0003)
-        {
-            return Tuple.Create(closestPoint.Item1, closestPoint.Item2);
-        }
-        
-        return Tuple.Create(extrapolatedLatitude, extrapolatedLongitude);
-        
-        // return Tuple.Create(closestPoint.Item1, closestPoint.Item2);
+        return Tuple.Create(closestPoint.Item1, closestPoint.Item2);
     }
     
     public static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
