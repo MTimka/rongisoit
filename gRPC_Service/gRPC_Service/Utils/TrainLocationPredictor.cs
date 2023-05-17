@@ -90,7 +90,7 @@ public class TrainLocationPredictor
         // return Tuple.Create(extrapolatedLatitude, extrapolatedLongitude);
         
         // Find the closest point on any track to the extrapolated location
-        dynamic closestPoint = null;
+        Tuple<double, double> closestPoint = null;
         var minDistance = double.PositiveInfinity;
 
         foreach (var track in tracks)
@@ -100,13 +100,13 @@ public class TrainLocationPredictor
                 var point1 = track[i];
                 var point2 = track[i+1];
 
-                var point = PointUtils.ClosestPointOnLine(
+                Tuple<double, double> point = PointUtils.ClosestPointOnLine(
                     Tuple.Create(point1.Latitude, point1.Longitude),
                     Tuple.Create(point2.Latitude, point2.Longitude),
                     Tuple.Create(extrapolatedLatitude, extrapolatedLongitude));
                 
                 // var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point1.Latitude, point1.Longitude);
-                var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point.Latitude, point.Longitude);
+                var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point.Item1, point.Item2);
                 if (distance < minDistance)
                 {
                     minDistance = distance;
@@ -115,7 +115,7 @@ public class TrainLocationPredictor
             }
         }
         
-        var distance1 = CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, closestPoint.Latitude, closestPoint.Longitude);
+        var distance1 = CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, closestPoint.Item1, closestPoint.Item2);
         var distance2 = CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, extrapolatedLatitude, extrapolatedLongitude);
 
         if (distance1 > distance2 || Math.Abs(distance1 - distance2) < 0.0003)
