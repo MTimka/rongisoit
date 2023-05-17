@@ -65,7 +65,7 @@ public class QuadTreeNode
 public class QuadTree
 {
     private QuadTreeNode root;
-    private const int MaxTracksPerNode = 10;
+    private const int MaxTracksPerNode = 5;
 
     public QuadTree(double minLat, double maxLat, double minLon, double maxLon)
     {
@@ -290,53 +290,7 @@ public class TrainLocationPredictor
         Tuple<double, double> closestPoint = null;
         var minDistance = double.PositiveInfinity;
         
-        // foreach (var track in tracks)
-        // {
-        //     for (int i = 0; i < track.Count - 1; i++)
-        //     {
-        //         var point1 = track[i];
-        //         var point2 = track[i+1];
-        //
-        //         Tuple<double, double> point = PointUtils.ClosestPointOnLine(
-        //             Tuple.Create(point1.Latitude, point1.Longitude),
-        //             Tuple.Create(point2.Latitude, point2.Longitude),
-        //             Tuple.Create(extrapolatedLatitude, extrapolatedLongitude));
-        //         
-        //         // var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point1.Latitude, point1.Longitude);
-        //         var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point.Item1, point.Item2);
-        //         if (distance < minDistance)
-        //         {
-        //             minDistance = distance;
-        //             closestPoint = point;
-        //         }
-        //     }
-        // }
-
-        var radius = 0.01;
-        
-        // var range = new BoundingBox(extrapolatedLatitude - radius, extrapolatedLongitude - radius, 2 * radius, 2 * radius);
-        // List<Point> pointsInRange = quadtree.QueryRange(range);
-
-        List<List<LatLng>> tracksInRange = quadtree.FindTracksInRange(extrapolatedLatitude, extrapolatedLongitude, radius);
-        
-        // foreach (var point in tracksInRange)
-        // {
-        //     Tuple<double, double> p = PointUtils.ClosestPointOnLine(
-        //         Tuple.Create(lastPoint.Latitude, lastPoint.Longitude),
-        //         Tuple.Create(point.X, point.Y),
-        //         Tuple.Create(extrapolatedLatitude, extrapolatedLongitude));
-        //     
-        //     // var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point.X, point.Y);
-        //     var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, p.Item1, p.Item2);
-        //     
-        //     if (distance < minDistance)
-        //     {
-        //         minDistance = distance;
-        //         closestPoint = Tuple.Create(p.Item1, p.Item2);
-        //     }
-        // }
-        
-        foreach (var track in tracksInRange)
+        foreach (var track in tracks)
         {
             for (int i = 0; i < track.Count - 1; i++)
             {
@@ -358,22 +312,68 @@ public class TrainLocationPredictor
             }
         }
 
+        // var radius = 0.01;
+        //
+        // // var range = new BoundingBox(extrapolatedLatitude - radius, extrapolatedLongitude - radius, 2 * radius, 2 * radius);
+        // // List<Point> pointsInRange = quadtree.QueryRange(range);
+        //
+        // List<List<LatLng>> tracksInRange = quadtree.FindTracksInRange(extrapolatedLatitude, extrapolatedLongitude, radius);
+        //
+        // // foreach (var point in tracksInRange)
+        // // {
+        // //     Tuple<double, double> p = PointUtils.ClosestPointOnLine(
+        // //         Tuple.Create(lastPoint.Latitude, lastPoint.Longitude),
+        // //         Tuple.Create(point.X, point.Y),
+        // //         Tuple.Create(extrapolatedLatitude, extrapolatedLongitude));
+        // //     
+        // //     // var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point.X, point.Y);
+        // //     var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, p.Item1, p.Item2);
+        // //     
+        // //     if (distance < minDistance)
+        // //     {
+        // //         minDistance = distance;
+        // //         closestPoint = Tuple.Create(p.Item1, p.Item2);
+        // //     }
+        // // }
+        //
+        // foreach (var track in tracksInRange)
+        // {
+        //     for (int i = 0; i < track.Count - 1; i++)
+        //     {
+        //         var point1 = track[i];
+        //         var point2 = track[i+1];
+        //
+        //         Tuple<double, double> point = PointUtils.ClosestPointOnLine(
+        //             Tuple.Create(point1.Latitude, point1.Longitude),
+        //             Tuple.Create(point2.Latitude, point2.Longitude),
+        //             Tuple.Create(extrapolatedLatitude, extrapolatedLongitude));
+        //         
+        //         // var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point1.Latitude, point1.Longitude);
+        //         var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point.Item1, point.Item2);
+        //         if (distance < minDistance)
+        //         {
+        //             minDistance = distance;
+        //             closestPoint = point;
+        //         }
+        //     }
+        // }
+
         if (closestPoint == null)
         {
             return Tuple.Create(extrapolatedLatitude, extrapolatedLongitude);
         }
-        //
-        // var distance1 = CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, closestPoint.Item1, closestPoint.Item2);
-        // var distance2 = CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, extrapolatedLatitude, extrapolatedLongitude);
-        //
-        // if (distance1 > distance2 || Math.Abs(distance1 - distance2) < 0.0003)
-        // {
-        //     return Tuple.Create(closestPoint.Item1, closestPoint.Item2);
-        // }
-        //
-        // return Tuple.Create(extrapolatedLatitude, extrapolatedLongitude);
         
-        return Tuple.Create(closestPoint.Item1, closestPoint.Item2);
+        var distance1 = CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, closestPoint.Item1, closestPoint.Item2);
+        var distance2 = CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, extrapolatedLatitude, extrapolatedLongitude);
+        
+        if (distance1 > distance2 || Math.Abs(distance1 - distance2) < 0.0003)
+        {
+            return Tuple.Create(closestPoint.Item1, closestPoint.Item2);
+        }
+        
+        return Tuple.Create(extrapolatedLatitude, extrapolatedLongitude);
+        
+        // return Tuple.Create(closestPoint.Item1, closestPoint.Item2);
     }
     
     public static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
