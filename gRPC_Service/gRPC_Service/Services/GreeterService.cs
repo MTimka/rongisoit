@@ -196,9 +196,9 @@ public class GreeterService : Greeter.GreeterBase
     {
         Console.WriteLine($"UpdateUserLocation [] {request.Id} {request.Latitude} {request.Longitude}");
 
-        if (request.AvgSpeed < 0.0005)
+        if (request.AvgSpeed < 0.002)
         {
-            request.AvgSpeed = 0.0005;
+            request.AvgSpeed = 0.002;
         }
         
         var pointToForward = DestinationPointCalculator.CalculateDestinationPoint(
@@ -555,7 +555,7 @@ public class GreeterService : Greeter.GreeterBase
                                 var trainLocationsToPredictOn = new List<TrainLocation>();
                                 trainLocationsToPredictOn.AddRange(m_trainLocationsCache[trainId]);
 
-                                double timeToPredict = 20 * 1000;
+                                double timeToPredict = 30 * 1000;
                                 var (r_lat2, r_lon2) = predictor.PredictLocation(
                                     m_trainLocationsCache[trainId], 
                                     m_trainLocationsCache[trainId].Last().Timestamp + timeToPredict,
