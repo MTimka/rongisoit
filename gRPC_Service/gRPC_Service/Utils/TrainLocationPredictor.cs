@@ -142,6 +142,8 @@ public class Point
     public double X { get; }
     public double Y { get; }
 
+    public Point? Previous { get; set; } = null;
+
     public Point(double x, double y)
     {
         X = x;
@@ -221,9 +223,18 @@ public class TrainLocationPredictor
         
         foreach (var track in tracks)
         {
-            foreach (var point in track)
+            for (int i = 1; i < track.Count; i++)
             {
-                quadtree.Insert(new Point(point.Latitude, point.Longitude));
+                var pp = new Point(track[0].Latitude, track[0].Longitude);
+                pp.Previous = new Point(track[1].Latitude, track[1].Longitude);
+                quadtree.Insert(pp);
+                
+                var point1 = track[i];
+                var point2 = track[i-1];
+            
+                var p = new Point(point1.Latitude, point1.Longitude);
+                p.Previous = new Point(point2.Latitude, point2.Longitude);
+                quadtree.Insert(p);
             }
         }
         
@@ -308,8 +319,8 @@ public class TrainLocationPredictor
         foreach (var point in pointsInRange)
         {
             Tuple<double, double> p = PointUtils.ClosestPointOnLine(
-                Tuple.Create(lastPoint.Latitude, lastPoint.Longitude),
                 Tuple.Create(point.X, point.Y),
+                Tuple.Create(point.Previous.X, point.Previous.Y),
                 Tuple.Create(extrapolatedLatitude, extrapolatedLongitude));
             
             // var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point.X, point.Y);
