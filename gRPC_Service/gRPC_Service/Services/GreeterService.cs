@@ -72,69 +72,80 @@ public class GreeterService : Greeter.GreeterBase
             }
 
             
-            // var pointToForward = DestinationPointCalculator.CalculateDestinationPoint(
-            //     new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-            //     m_userRotations[key], 
-            //     50
-            // );
-            //     
-            // var pointToBackward = DestinationPointCalculator.CalculateDestinationPoint(
-            //     new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-            //     m_userRotations[key] + 180, 
-            //     20
-            // );
-            //
-            // var (sp1, sp2) = TriangleHelper.FindTriangleSidePoints(
-            //     new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-            //     pointToForward
-            // );
-            //
-            // var doesIntersect1 = LineIntersectionChecker.DoLinesIntersect(
-            //     new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-            //     pointToForward,
-            //     new Utils.LatLng(request.Latitude, request.Longitude),
-            //     new Utils.LatLng(request.PredLatitude, request.PredLongitude)
-            // );
-            //
-            // var doesIntersect2 = LineIntersectionChecker.DoLinesIntersect(
-            //     new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
-            //     pointToBackward,
-            //     new Utils.LatLng(request.Latitude, request.Longitude),
-            //     new Utils.LatLng(request.PredLatitude, request.PredLongitude)
-            // );
-            //
-            // var doesIntersectTopToLeft = LineIntersectionChecker.DoLinesIntersect(
-            //     pointToForward,
-            //     sp1,
-            //     new Utils.LatLng(request.Latitude, request.Longitude),
-            //     new Utils.LatLng(request.PredLatitude, request.PredLongitude)
-            // );
-            //
-            // var doesIntersectLeftToBottom = LineIntersectionChecker.DoLinesIntersect(
-            //     sp1,
-            //     pointToBackward,
-            //     new Utils.LatLng(request.Latitude, request.Longitude),
-            //     new Utils.LatLng(request.PredLatitude, request.PredLongitude)
-            // );
-            //
-            // var doesIntersectBottomToRight = LineIntersectionChecker.DoLinesIntersect(
-            //     pointToBackward,
-            //     sp2,
-            //     new Utils.LatLng(request.Latitude, request.Longitude),
-            //     new Utils.LatLng(request.PredLatitude, request.PredLongitude)
-            // );
-            //
-            // var doesIntersectRightToTop = LineIntersectionChecker.DoLinesIntersect(
-            //     sp2,
-            //     pointToForward,
-            //     new Utils.LatLng(request.Latitude, request.Longitude),
-            //     new Utils.LatLng(request.PredLatitude, request.PredLongitude)
-            // );
-            //
-            // if (doesIntersect1 || doesIntersect2 || doesIntersectTopToLeft || doesIntersectLeftToBottom || doesIntersectBottomToRight || doesIntersectRightToTop)
-            // {
-            //     m_userEvents1[key].Set();
-            // }
+            var pointToForward = DestinationPointCalculator.CalculateDestinationPoint(
+                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+                m_userRotations[key], 
+                50000
+            );
+                
+            var pointToBackward = DestinationPointCalculator.CalculateDestinationPoint(
+                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+                m_userRotations[key] + 180, 
+                2000
+            );
+            
+            var (sp1, sp2) = TriangleHelper.FindTriangleSidePoints(
+                new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+                pointToForward
+            );
+
+            var lastLocation = new Utils.LatLng(request.Latitude, request.Longitude);
+            
+            foreach (var prediction in request.Predictions)
+            {
+                var currentLocation = new Utils.LatLng(prediction.Latitude, prediction.Longitude);
+
+                var doesIntersect1 = LineIntersectionChecker.DoLinesIntersect(
+                    new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+                    pointToForward,
+                    lastLocation,
+                    currentLocation
+                );
+                
+                var doesIntersect2 = LineIntersectionChecker.DoLinesIntersect(
+                    new Utils.LatLng(m_userLocations[key].Latitude, m_userLocations[key].Longitude),
+                    pointToBackward,
+                    lastLocation,
+                    currentLocation
+                );
+                
+                var doesIntersectTopToLeft = LineIntersectionChecker.DoLinesIntersect(
+                    pointToForward,
+                    sp1,
+                    lastLocation,
+                    currentLocation
+                );
+                
+                var doesIntersectLeftToBottom = LineIntersectionChecker.DoLinesIntersect(
+                    sp1,
+                    pointToBackward,
+                    lastLocation,
+                    currentLocation
+                );
+                
+                var doesIntersectBottomToRight = LineIntersectionChecker.DoLinesIntersect(
+                    pointToBackward,
+                    sp2,
+                    lastLocation,
+                    currentLocation
+                );
+                
+                var doesIntersectRightToTop = LineIntersectionChecker.DoLinesIntersect(
+                    sp2,
+                    pointToForward,
+                    lastLocation,
+                    currentLocation
+                );
+                
+                if (doesIntersect1 || doesIntersect2 || doesIntersectTopToLeft || doesIntersectLeftToBottom || doesIntersectBottomToRight || doesIntersectRightToTop)
+                {
+                    m_userEvents1[key].Set();
+                    break;
+                }
+
+                lastLocation = currentLocation;
+            }
+            
 
             // var dist = m_userLocations[key].HaversineDistance(new LatLng
             //     { Latitude = request.Latitude, Longitude = request.Longitude });
