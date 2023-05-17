@@ -120,7 +120,7 @@ public class TrainLocationPredictor
 
         if (distance1 > distance2 || Math.Abs(distance1 - distance2) < 0.0003)
         {
-            return Tuple.Create(closestPoint.Latitude, closestPoint.Longitude);
+            return Tuple.Create(closestPoint.Item1, closestPoint.Item2);
         }
         
         return Tuple.Create(extrapolatedLatitude, extrapolatedLongitude);
