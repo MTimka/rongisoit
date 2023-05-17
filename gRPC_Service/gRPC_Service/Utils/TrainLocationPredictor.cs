@@ -114,6 +114,11 @@ public class TrainLocationPredictor
                 }
             }
         }
+
+        if (closestPoint == null)
+        {
+            return Tuple.Create(extrapolatedLatitude, extrapolatedLongitude);
+        }
         
         var distance1 = CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, closestPoint.Item1, closestPoint.Item2);
         var distance2 = CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, extrapolatedLatitude, extrapolatedLongitude);
