@@ -525,21 +525,27 @@ public class GreeterService : Greeter.GreeterBase
 
                                 double timeToPredict = 20;
                                 var (r_lat2, r_lon2) = predictor.PredictLocation(
-                                    trainLocationsToPredictOn, 
-                                    m_trainLocationsCache[trainId].Last().Timestamp  + timeToPredict,
+                                    m_trainLocationsCache[trainId], 
+                                    m_trainLocationsCache[trainId].Last().Timestamp + timeToPredict,
                                     deep: false);
                                 var distanceToTravel = PointUtils.CalculateDistance(r_lat2, r_lon2, m_trainLocationsCache[trainId].Last().Latitude, m_trainLocationsCache[trainId].Last().Longitude);
                                 double totalDistanceTraveledInPrediction = 0;
                                 
                                 double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + 1;
-                                double end_timestamp = ee_timestamp + 20;
+                                double end_timestamp = ee_timestamp + timeToPredict;
                                 for (; ee_timestamp < end_timestamp; ee_timestamp += 1)
                                 {
                                     // var (r_lat, r_lon) = SimplePredictor.PredictLocation(m_trainLocationsCache[trainId], Convert.ToInt64(ee_timestamp));
                                     var (r_lat, r_lon) = predictor.PredictLocation(trainLocationsToPredictOn, ee_timestamp);
                                     
+                                    tLoc.Predictions.Add(new PLatLng
+                                    {
+                                        Latitude = r_lat,
+                                        Longitude = r_lon,
+                                    });
+                                    
                                     //  check  if prediction can travel that far
-                                    var distancePredicted = PointUtils.CalculateDistance(r_lat, r_lon, m_trainLocationsCache[trainId].Last().Latitude, m_trainLocationsCache[trainId].Last().Longitude);
+                                    var distancePredicted = PointUtils.CalculateDistance(r_lat, r_lon, trainLocationsToPredictOn.Last().Latitude, trainLocationsToPredictOn.Last().Longitude);
                                     totalDistanceTraveledInPrediction += distancePredicted;
                                     if (totalDistanceTraveledInPrediction > distanceToTravel)
                                     {
@@ -551,12 +557,6 @@ public class GreeterService : Greeter.GreeterBase
                                         Latitude = r_lat,
                                         Longitude = r_lon,
                                         Timestamp = ee_timestamp
-                                    });
-                                    
-                                    tLoc.Predictions.Add(new PLatLng
-                                    {
-                                        Latitude = r_lat,
-                                        Longitude = r_lon,
                                     });
                                 }
                             }
