@@ -18,8 +18,19 @@ public class BoundingBox {
         double maxX = X + Width;
         double maxY = Y + Height;
 
-        return (longitude >= minX && longitude <= maxX)
-               && (latitude >= minY && latitude <= maxY);
+        // Convert latitude and longitude to radians
+        double latRad = latitude * Math.PI / 180.0;
+        double lonRad = longitude * Math.PI / 180.0;
+
+        // Earth radius in kilometers
+        double earthRadiusKm = 6371.0;
+
+        // Calculate the distance between the bounding box and the point
+        double dx = earthRadiusKm * Math.Cos(latRad) * (Math.Cos(lonRad) - Math.Cos(minY * Math.PI / 180.0));
+        double dy = earthRadiusKm * (Math.Sin(latRad) - Math.Sin(minX * Math.PI / 180.0));
+
+        return (dx >= 0 && dx <= Width)
+               && (dy >= 0 && dy <= Height);
     }
 }
 
@@ -28,6 +39,9 @@ public class TrainLocationPredictor
     private List<List<Tuple<double, double>>> railways;
     private List<List<LatLng>> tracks;
     private List<Tuple<BoundingBox, List<LatLng>>> boxedTracks =  new List<Tuple<BoundingBox, List<LatLng>>>();
+    
+    private const double EarthRadiusKm = 6371.0;
+
     
     public TrainLocationPredictor()
     {
@@ -89,26 +103,48 @@ public class TrainLocationPredictor
         foreach (var track in tracks)
         {
             // get bounding box
-            double minX = double.MaxValue;
-            double minY = double.MaxValue;
-            double maxX = double.MinValue;
-            double maxY = double.MinValue;
+            double minLat = double.MaxValue;
+            double minLon = double.MaxValue;
+            double maxLat = double.MinValue;
+            double maxLon = double.MinValue;
 
             foreach (var point in track)
             {
-                minX = Math.Min(minX, point.Latitude);
-                minY = Math.Min(minY, point.Longitude);
-                maxX = Math.Max(maxX, point.Latitude);
-                maxY = Math.Max(maxY, point.Longitude);
+                minLat = Math.Min(minLat, point.Latitude);
+                minLon = Math.Min(minLon, point.Longitude);
+                maxLat = Math.Max(maxLat, point.Latitude);
+                maxLon = Math.Max(maxLon, point.Longitude);
             }
 
-            double width = maxX - minX;
-            double height = maxY - minY;
-            double x = minX;
-            double y = minY;
+            // Convert the latitude and longitude to radians
+            double minLatRad = minLat * Math.PI / 180.0;
+            double maxLatRad = maxLat * Math.PI / 180.0;
+            double minLonRad = minLon * Math.PI / 180.0;
+            double maxLonRad = maxLon * Math.PI / 180.0;
 
-            var bb = new BoundingBox { X = x, Y = y, Width = width, Height = height };
-            boxedTracks.Add(Tuple.Create(bb, track));
+            // Calculate the distance between two points using the Haversine formula
+            double distanceLat = maxLatRad - minLatRad;
+            double distanceLon = maxLonRad - minLonRad;
+            double a = Math.Sin(distanceLat / 2) * Math.Sin(distanceLat / 2) +
+                       Math.Cos(minLatRad) * Math.Cos(maxLatRad) *
+                       Math.Sin(distanceLon / 2) * Math.Sin(distanceLon / 2);
+            double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+            double distance = EarthRadiusKm * c;
+
+            // Calculate the bounding box dimensions
+            double width = distance;
+            double height = distance;
+
+            // Calculate the center of the bounding box
+            double centerLat = (minLat + maxLat) / 2.0;
+            double centerLon = (minLon + maxLon) / 2.0;
+
+            // Calculate the top-left corner of the bounding box
+            double x = centerLat - (width / 2.0);
+            double y = centerLon - (height / 2.0);
+
+            BoundingBox boundingBox = new BoundingBox { X = x, Y = y, Width = width, Height = height };
+            boxedTracks.Add(Tuple.Create(boundingBox, track));
         }
         
     }
