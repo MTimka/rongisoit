@@ -482,7 +482,7 @@ public class GreeterService : Greeter.GreeterBase
                         
                         // Convert DateTimeOffset to Unix timestamp
                         long unixTimestamp = dateTimeOffset?.ToUnixTimeMilliseconds() ?? 0;
-                        double timestamp = unixTimestamp / 1000.0;
+                        double timestamp = unixTimestamp;
 
                         var tLoc = new TrainLocation
                         {
@@ -523,17 +523,18 @@ public class GreeterService : Greeter.GreeterBase
                                 var trainLocationsToPredictOn = new List<TrainLocation>();
                                 trainLocationsToPredictOn.AddRange(m_trainLocationsCache[trainId]);
 
-                                double timeToPredict = 20;
+                                double timeToPredict = 20 * 1000;
                                 var (r_lat2, r_lon2) = predictor.PredictLocation(
                                     m_trainLocationsCache[trainId], 
                                     m_trainLocationsCache[trainId].Last().Timestamp + timeToPredict,
                                     deep: false);
                                 var distanceToTravel = PointUtils.CalculateDistance(r_lat2, r_lon2, m_trainLocationsCache[trainId].Last().Latitude, m_trainLocationsCache[trainId].Last().Longitude);
                                 double totalDistanceTraveledInPrediction = 0;
-                                
-                                double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + 1;
+
+                                double timestampStep = 300.0;
+                                double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + timestampStep;
                                 double end_timestamp = ee_timestamp + timeToPredict;
-                                for (; ee_timestamp < end_timestamp; ee_timestamp += 1)
+                                for (; ee_timestamp < end_timestamp; ee_timestamp += timestampStep)
                                 {
                                     // var (r_lat, r_lon) = SimplePredictor.PredictLocation(m_trainLocationsCache[trainId], Convert.ToInt64(ee_timestamp));
                                     var (r_lat, r_lon) = predictor.PredictLocation(trainLocationsToPredictOn, ee_timestamp);
