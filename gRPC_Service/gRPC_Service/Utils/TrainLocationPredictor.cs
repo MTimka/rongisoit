@@ -68,7 +68,7 @@ public class TrainLocationPredictor
         }
     }
 
-    public Tuple<double, double> PredictLocation(List<TrainLocation> trainLocations, double targetTimestamp)
+    public Tuple<double, double> PredictLocation(List<TrainLocation> trainLocations, double targetTimestamp, List<TrainLocation> Predictions)
     {
         // Extrapolate the location based on the rate of change between the last two known data points
 
@@ -98,25 +98,23 @@ public class TrainLocationPredictor
             for (int i = 0; i < track.Count - 1; i++)
             {
                 var point1 = track[i];
-                var point2 = track[i + 1];
+                var point2 = track[i+1];
 
-                var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point1.Latitude, point1.Longitude);
+                var point = PointUtils.ClosestPointOnLine(
+                    Tuple.Create(point1.Latitude, point1.Longitude),
+                    Tuple.Create(point2.Latitude, point2.Longitude),
+                    Tuple.Create(extrapolatedLatitude, extrapolatedLongitude));
+                
+                // var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point1.Latitude, point1.Longitude);
+                var distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point.Latitude, point.Longitude);
                 if (distance < minDistance)
                 {
                     minDistance = distance;
-                    closestPoint = point1;
-                }
-
-                // Check if the extrapolated location is closer to the end of a track and the start of the next track
-                distance = CalculateDistance(extrapolatedLatitude, extrapolatedLongitude, point2.Latitude, point2.Longitude);
-                if (distance < minDistance)
-                {
-                    minDistance = distance;
-                    closestPoint = point2;
+                    closestPoint = point;
                 }
             }
         }
-
+        
         var distance1 = CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, closestPoint.Latitude, closestPoint.Longitude);
         var distance2 = CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, extrapolatedLatitude, extrapolatedLongitude);
 
