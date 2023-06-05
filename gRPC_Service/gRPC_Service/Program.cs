@@ -1,9 +1,11 @@
 using System.Net;
 using gRPC_Service.Services;
 using gRPC_Service.Tests;
+using gRPC_Service.Utils;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 // run few tests at first
+TrainLocationPredictor.Test1();
 // DrawTracks.Test1();
 // LinearTest.Test1();
 // LinearTest.Test2();

@@ -15,14 +15,14 @@ public class PointUtils
         return degrees * Math.PI / 180.0;
     }
     
-    public static Tuple<double, double> ClosestPointOnLine(Tuple<double, double> linePoint1, Tuple<double, double> linePoint2, Tuple<double, double> point)
+    public static Tuple<double, double> ClosestPointOnLine(LatLng linePoint1, LatLng linePoint2, TrainLocation point)
     {
-        double x1 = linePoint1.Item1;
-        double y1 = linePoint1.Item2;
-        double x2 = linePoint2.Item1;
-        double y2 = linePoint2.Item2;
-        double x3 = point.Item1;
-        double y3 = point.Item2;
+        double x1 = linePoint1.Latitude;
+        double y1 = linePoint1.Longitude;
+        double x2 = linePoint2.Latitude;
+        double y2 = linePoint2.Longitude;
+        double x3 = point.Latitude;
+        double y3 = point.Longitude;
 
         // Calculate the slope of the line.
         double slope;
@@ -70,393 +70,67 @@ public class PointUtils
 
         return Tuple.Create(x, y);
     }
-
-    public static Tuple<double, double> GetPointOnTrack(List<dynamic> track, Tuple<double, double> point)
-    {
-        Tuple<double, double> closestPoint = null;
-        double closestPointDif = 0;
-
-        for (int i = 1; i < track.Count; i++)
-        {
-            var linePoint1 = Tuple.Create((double)track[i - 1].Latitude, (double)track[i - 1].Longitude);
-            var linePoint2 = Tuple.Create((double)track[i].Latitude, (double)track[i].Longitude);
-
-            var closestPointOnLine = ClosestPointOnLine(linePoint1, linePoint2, point);
-            double x = closestPointOnLine.Item1;
-            double y = closestPointOnLine.Item2;
-
-            double dif = Math.Abs(x - point.Item1) + Math.Abs(y - point.Item2);
-
-            if (closestPoint == null || dif < closestPointDif)
-            {
-                closestPoint = Tuple.Create(x, y);
-                closestPointDif = dif;
-            }
-        }
-
-        return closestPoint;
-    }
     
-    public static int GetClosestNodeIndexOnTrack(List<dynamic> track, Tuple<double, double> point)
+    public static double GetBearing(double p1Lat, double p1Lon, double p2Lat, double p2Lon)
     {
-        int closestNodeIndex = -1;
-        double closestDif = 0;
+        double lat1 = p1Lat * (Math.PI / 180.0);
+        double lon1 = p1Lon * (Math.PI / 180.0);
+        double lat2 = p2Lat * (Math.PI / 180.0);
+        double lon2 = p2Lon * (Math.PI / 180.0);
 
-        for (int i = 0; i < track.Count; i++)
-        {
-            double dif = Math.Abs((double)track[i].Latitude - point.Item1) + Math.Abs((double)track[i].Longitude - point.Item2);
+        double dlon = lon2 - lon1;
 
-            if (closestNodeIndex == -1 || dif < closestDif)
-            {
-                closestNodeIndex = i;
-                closestDif = dif;
-            }
-        }
+        double y = Math.Sin(dlon) * Math.Cos(lat2);
+        double x = Math.Cos(lat1) * Math.Sin(lat2) - Math.Sin(lat1) * Math.Cos(lat2) * Math.Cos(dlon);
 
-        return closestNodeIndex;
+        double bearing = Math.Atan2(y, x);
+        bearing = bearing * (180.0 / Math.PI);
+        bearing = (bearing + 360) % 360;
+
+        return bearing;
     }
 
-    public static Tuple<double, double> TrackWalker(List<List<dynamic>> tracks, List<dynamic> trainLocations, int closestTrackIndex, long timestamp)
+    public static int DetermineMovementDirection(List<LatLng> trackNodes, TrainLocation lastPosition, TrainLocation secondLastPosition)
     {
-        // DateTime timestampDt = DateTime.ParseExact(timestamp, "yyyy-MM-dd'T'HH:mm:ss.fff'Z'", CultureInfo.InvariantCulture);
-        // DateTime lastTrainLocationDt = DateTime.ParseExact(trainLocations.Last().timestamp, "yyyy-MM-dd'T'HH:mm:ss.fff'Z'", CultureInfo.InvariantCulture);
+        double trainBearing = GetBearing(secondLastPosition.Latitude, secondLastPosition.Longitude, lastPosition.Latitude, lastPosition.Longitude);
 
-        var timestampDt = DateTimeOffset.FromUnixTimeSeconds(timestamp);
-        var lastTrainLocationDt = DateTimeOffset.FromUnixTimeSeconds(trainLocations.Last().timestamp);
-        
-        double secondsToWalk = (timestampDt - lastTrainLocationDt).TotalSeconds;
-        if (g_bDebug == true)
-        { Console.WriteLine("seconds_to_walk: " + secondsToWalk); }
+        var closestLastPosition = trackNodes.OrderBy(node => CalculateDistance(lastPosition.Latitude, lastPosition.Longitude, node.Latitude, node.Longitude)).First();
+        int lastIndex = trackNodes.IndexOf(closestLastPosition);
 
-        double totalDistance = 0;
-        DateTimeOffset? previousTime = null;
-        dynamic previousLocation = null;
-        foreach (dynamic location in trainLocations)
+        if (lastIndex == 0 || lastIndex < trackNodes.Count - 1)
         {
-            double latitude1 = ToRadians(location.Latitude);
-            double longitude1 = ToRadians(location.Longitude);
-            var time = DateTimeOffset.FromUnixTimeSeconds(location.timestamp);
+            int nextIndex = (lastIndex + 1) % trackNodes.Count;
+            var nextNode = trackNodes[nextIndex];
+            double trackBearing = GetBearing(trackNodes[lastIndex].Latitude, trackNodes[lastIndex].Longitude, nextNode.Latitude, nextNode.Longitude);
 
-            if (previousTime != null)
+            Console.WriteLine("track_bearing next: " + trackBearing + ", train_bearing: " + trainBearing);
+
+            if (Math.Abs(trackBearing - trainBearing) > 90)
             {
-                double timeDifference = (time - previousTime.Value).TotalSeconds;
-                double latitude2 = ToRadians(previousLocation.Latitude);
-                double longitude2 = ToRadians(previousLocation.Longitude);
-
-                double distance = 2 * 6371 * Asin(Sqrt(Sin((latitude2 - latitude1) / 2) * Sin((latitude2 - latitude1) / 2) + Cos(latitude1) * Cos(latitude2) * Sin((longitude2 - longitude1) / 2) * Sin((longitude2 - longitude1) / 2)));
-                totalDistance += distance;
-
-                double speed = distance / timeDifference;
-                
-                if (g_bDebug == true)
-                { Console.WriteLine("Speed: " + speed + " km/s"); }
-            }
-
-            previousTime = time;
-            previousLocation = location;
-        }
-
-        double averageDistancePerSecond = totalDistance / (trainLocations.Count - 1);
-        
-        if (g_bDebug == true)
-        { Console.WriteLine("Average distance traveled per second: " + averageDistancePerSecond + " km/s"); } 
-
-        dynamic loc = trainLocations.Last();
-        Tuple<double, double> point = new Tuple<double, double>(loc.Latitude, loc.Longitude);
-        dynamic closestTrack = tracks[closestTrackIndex];
-        Tuple<double, double> closestPoint = GetPointOnTrack(closestTrack, point);
-        
-        if (g_bDebug == true)
-        { Console.WriteLine("closest_point: " + closestPoint); }
-
-        dynamic loc2 = trainLocations[trainLocations.Count - 2];
-        Tuple<double, double> point2 = new Tuple<double, double>(loc2.Latitude, loc2.Longitude);
-        Tuple<double, double> closestPoint2 = GetPointOnTrack(closestTrack, point2);
-        
-        if (g_bDebug == true)
-        { Console.WriteLine("closest_point2: " + closestPoint2); }
-
-        int closestNodeIndex = GetClosestNodeIndexOnTrack(closestTrack, point);
-        if (g_bDebug == true)
-        { Console.WriteLine("closest_node_index: " + closestNodeIndex); }
-        dynamic closestNode = closestTrack[closestNodeIndex];
-        dynamic lastNode = null;
-        dynamic nextNode = null;
-
-        double closestNodeDifToClosestPoint1 = Abs(closestPoint.Item1 - closestNode.Latitude) + Abs(closestPoint.Item2 - closestNode.Longitude);
-        double closestNodeDifToClosestPoint2 = Abs(closestPoint2.Item1 - closestNode.Latitude) + Abs(closestPoint2.Item2 - closestNode.Longitude);
-        double? lastNodeDifToClosestPoint1 = null;
-        double? lastNodeDifToClosestPoint2 = null;
-        double? nextNodeDifToClosestPoint1 = null;
-        double? nextNodeDifToClosestPoint2 = null;
-
-        if (closestNodeIndex > 0)
-        {
-            lastNode = closestTrack[closestNodeIndex - 1];
-            lastNodeDifToClosestPoint1 = Abs(closestPoint.Item1 - lastNode.Latitude) + Abs(closestPoint.Item2 - lastNode.Longitude);
-            lastNodeDifToClosestPoint2 = Abs(closestPoint2.Item1 - lastNode.Latitude) + Abs(closestPoint2.Item2 - lastNode.Longitude);
-        }
-
-        if (closestNodeIndex < closestTrack.Count - 1)
-        {
-            nextNode = closestTrack[closestNodeIndex + 1];
-            nextNodeDifToClosestPoint1 = Abs(closestPoint.Item1 - nextNode.Latitude) + Abs(closestPoint.Item2 - nextNode.Longitude);
-            nextNodeDifToClosestPoint2 = Abs(closestPoint2.Item1 - nextNode.Latitude) + Abs(closestPoint2.Item2 - nextNode.Longitude);
-        }
-
-        if (g_bDebug == true)
-        {
-            Console.WriteLine("closest_node_dif_to_closest_point1: " + closestNodeDifToClosestPoint1);
-            Console.WriteLine("closest_node_dif_to_closest_point2: " + closestNodeDifToClosestPoint2);
-            Console.WriteLine("last_node_dif_to_closest_point1: " + lastNodeDifToClosestPoint1);
-            Console.WriteLine("last_node_dif_to_closest_point2: " + lastNodeDifToClosestPoint2);
-            Console.WriteLine("next_node_dif_to_closest_point1: " + nextNodeDifToClosestPoint1);
-            Console.WriteLine("next_node_dif_to_closest_point2: " + nextNodeDifToClosestPoint2);
-        }
-
-        bool movingNextOnTrack = true;
-
-        if (lastNodeDifToClosestPoint1 == null || nextNodeDifToClosestPoint1 == null)
-        {
-            if (lastNodeDifToClosestPoint1 == null)
-            {
-                if (nextNodeDifToClosestPoint1 < nextNodeDifToClosestPoint2)
-                {
-                    movingNextOnTrack = true;
-                }
-                else if (closestNodeDifToClosestPoint1 < closestNodeDifToClosestPoint2)
-                {
-                    movingNextOnTrack = false;
-                }
-            }
-            else if (nextNodeDifToClosestPoint1 == null)
-            {
-                if (lastNodeDifToClosestPoint1 < lastNodeDifToClosestPoint2)
-                {
-                    movingNextOnTrack = false;
-                }
-                else if (closestNodeDifToClosestPoint1 < closestNodeDifToClosestPoint2)
-                {
-                    movingNextOnTrack = true;
-                }
-            }
-        }
-        else
-        {
-            if (nextNodeDifToClosestPoint1 < nextNodeDifToClosestPoint2)
-            {
-                movingNextOnTrack = true;
-            }
-            else if (lastNodeDifToClosestPoint1 < lastNodeDifToClosestPoint2)
-            {
-                movingNextOnTrack = false;
-            }
-        }
-
-        if (g_bDebug == true)
-        { Console.WriteLine("moving_next_on_track: " + movingNextOnTrack); }
-
-        int nextNodeIndex;
-
-        if (movingNextOnTrack && (nextNodeDifToClosestPoint1 == null || closestNodeDifToClosestPoint1 < nextNodeDifToClosestPoint1))
-        {
-            nextNodeIndex = closestNodeIndex;
-        }
-        else if (movingNextOnTrack)
-        {
-            nextNodeIndex = closestNodeIndex + 1;
-        }
-        else if (!movingNextOnTrack && (lastNodeDifToClosestPoint1 == null || closestNodeDifToClosestPoint1 < lastNodeDifToClosestPoint1))
-        {
-            nextNodeIndex = closestNodeIndex;
-        }
-        else
-        {
-            nextNodeIndex = closestNodeIndex - 1;
-        }
-
-        if (g_bDebug == true)
-        { Console.WriteLine("next_node_index: " + nextNodeIndex); }
-
-        var currentLoc = closestPoint;
-        var currentTrackIndex = closestTrackIndex;
-        var trackIndexCache = new List<int>() { currentTrackIndex };
-        var currentTrack = tracks[closestTrackIndex];
-        var secondsLeftToWalk = secondsToWalk;
-
-        while (secondsLeftToWalk > 0)
-        {
-            if (g_bDebug == true)
-            { Console.WriteLine("walker index: " + nextNodeIndex); }
-
-            var latitude1 = ToRadians(currentLoc.Item1);
-            var longitude1 = ToRadians(currentLoc.Item2);
-
-            var latlon = currentTrack[nextNodeIndex];
-
-            var latitude2 = ToRadians(latlon.Latitude);
-            var longitude2 = ToRadians(latlon.Longitude);
-            var distance = 2 * 6371 * Asin(Sqrt(Sin((latitude2 - latitude1) / 2) * Sin((latitude2 - latitude1) / 2) + Cos(latitude1) * Cos(latitude2) * Sin((longitude2 - longitude1) / 2) * Sin((longitude2 - longitude1) / 2)));
-
-            var timeToTravelDistance = distance * 1 / averageDistancePerSecond;
-            
-            if (g_bDebug == true)
-            { Console.WriteLine("time_to_travel_distance: " + timeToTravelDistance); }
-
-            secondsLeftToWalk -= timeToTravelDistance;
-            currentLoc = Tuple.Create(latlon.Latitude, latlon.Longitude);
-            break;
-            
-            if (movingNextOnTrack)
-            {
-                nextNodeIndex += 1;
-
-                // find next track
-                if (nextNodeIndex >= currentTrack.Count)
-                {
-                    break;
-                    
-                    var foundTrack = false;
-                    for (var i = 0; i < tracks.Count; i++)
-                    {
-                        if (i == currentTrackIndex)
-                            continue;
-
-                        for (var j = 0; j < tracks[i].Count; j++)
-                        {
-                            var node = tracks[i][j];
-                            if (Abs(node.Latitude - currentTrack[^1].Latitude) < 0.0000001 && Abs(node.Longitude - currentTrack[^1].Longitude) < 0.0000001)
-                            {
-                                if (g_bDebug == true)
-                                { Console.WriteLine("new track continuation 1: " + i); }
-                                
-                                currentTrack = tracks[i];
-                                currentTrackIndex = i;
-                                
-                                // check if we r looping somehow, then break out
-                                if (trackIndexCache.Contains(currentTrackIndex))
-                                { break; }
-                                
-                                trackIndexCache.Add(currentTrackIndex);
-                                nextNodeIndex = j;
-                                foundTrack = true;
-                                break;
-                            }
-                        }
-                        if (foundTrack)
-                            break;
-                    }
-                    if (!foundTrack)
-                        break;
-                }
+                return -1; // Backward (-1)
             }
             else
             {
-                nextNodeIndex -= 1;
-
-                // find next track
-                if (nextNodeIndex < 0)
-                {
-                    break;
-
-                    var foundTrack = false;
-                    for (var i = 0; i < tracks.Count; i++)
-                    {
-                        if (i == currentTrackIndex)
-                            continue;
-
-                        for (var j = 0; j < tracks[i].Count; j++)
-                        {
-                            var node = tracks[i][j];
-                            if (Abs(node.Latitude - currentTrack[0].Latitude) < 0.0000001 && Abs(node.Longitude - currentTrack[0].Longitude) < 0.0000001)
-                            {
-                                if (g_bDebug == true)
-                                { Console.WriteLine("new track continuation 2: " + i); }
-                                
-                                currentTrack = tracks[i];
-                                currentTrackIndex = i;
-                                
-                                // check if we r looping somehow, then break out
-                                if (trackIndexCache.Contains(currentTrackIndex))
-                                { break; }
-                                
-                                trackIndexCache.Add(currentTrackIndex);
-                                nextNodeIndex = j;
-                                foundTrack = true;
-                                break;
-                            }
-                        }
-                        if (foundTrack)
-                            break;
-                    }
-                    if (!foundTrack)
-                        break;
-                }
+                return 1; // Forward (+1)
             }
         }
-
-        return currentLoc;
-    }
-    
-    public static Tuple<List<Tuple<double, double>>, int> GetClosestTract(dynamic loc, List<List<Tuple<double, double>>> railways)
-    {
-        List<Tuple<double, double>> closestTrack = null;
-        Tuple<double, double> closestNode = null;
-        double closestDif = 0.0;
-        int closestTrackIndex = 0;
-
-        for (int trackIndex = 0; trackIndex < railways.Count; trackIndex++)
+        else
         {
-            var track = railways[trackIndex];
+            int previousIndex = (lastIndex - 1) % trackNodes.Count;
+            var previousNode = trackNodes[previousIndex];
+            double trackBearing = GetBearing(trackNodes[lastIndex].Latitude, trackNodes[lastIndex].Longitude, previousNode.Latitude, previousNode.Longitude);
 
-            for (int i = 0; i < track.Count; i++)
+            Console.WriteLine("track_bearing previous: " + trackBearing + ", train_bearing: " + trainBearing);
+
+            if (Math.Abs(trackBearing - trainBearing) > 90)
             {
-                Tuple<double, double> lastNode = null;
-                Tuple<double, double> currentNode = track[i];
-                Tuple<double, double> nextNode = null;
-
-                double? dif1 = null;
-                double? dif2 = null;
-
-                if (i > 0)
-                {
-                    lastNode = track[i - 1];
-                    var closestPoint1 = ClosestPointOnLine(lastNode, currentNode, Tuple.Create(loc.Latitude, loc.Longitude));
-                    dif1 = Math.Abs(loc.Latitude - closestPoint1.Item1) + Math.Abs(loc.Longitude - closestPoint1.Item2);
-                }
-
-                if (i < track.Count - 1)
-                {
-                    nextNode = track[i + 1];
-                    var closestPoint2 = ClosestPointOnLine(nextNode, currentNode, Tuple.Create(loc.Latitude, loc.Longitude));
-                    dif2 = Math.Abs(loc.Latitude - closestPoint2.Item1) + Math.Abs(loc.Longitude - closestPoint2.Item2);
-                }
-
-                double dif;
-                if (dif1 == null)
-                {
-                    dif = dif2.Value;
-                }
-                else if (dif2 == null)
-                {
-                    dif = dif1.Value;
-                }
-                else
-                {
-                    dif = dif1.Value < dif2.Value ? dif1.Value : dif2.Value;
-                }
-
-                if (closestNode == null || dif < closestDif)
-                {
-                    closestDif = dif;
-                    closestNode = currentNode;
-                    closestTrack = track;
-                    closestTrackIndex = trackIndex;
-                }
+                return 1; // Forward (+1)
+            }
+            else
+            {
+                return -1; // Backward (-1)
             }
         }
-
-        return Tuple.Create(closestTrack, closestTrackIndex);
     }
 
     public static double CalculateDifference(double lat1, double lon1, double lat2, double lon2)
@@ -488,4 +162,88 @@ public class PointUtils
 
         return distance;
     }
+    
+    public static List<double> InterpolateGPSData(List<GPSDataPoint> gpsData, double targetTimestamp)
+    {
+        List<double> targetPosition = new List<double>();
+        List<double> timestamps = gpsData.Select(data => data.Timestamp).ToList();
+        List<double> latitudes = gpsData.Select(data => data.Latitude).ToList();
+        List<double> longitudes = gpsData.Select(data => data.Longitude).ToList();
+
+        Func<double, double> interpolateLatitude = Interpolate(timestamps, latitudes);
+        Func<double, double> interpolateLongitude = Interpolate(timestamps, longitudes);
+
+        double interpolatedLatitude = interpolateLatitude(targetTimestamp);
+        double interpolatedLongitude = interpolateLongitude(targetTimestamp);
+
+        targetPosition.Add(interpolatedLatitude);
+        targetPosition.Add(interpolatedLongitude);
+
+        return targetPosition;
+    }
+
+    public static Func<double, double> Interpolate(List<double> xValues, List<double> yValues)
+    {
+        if (xValues.Count != yValues.Count)
+        {
+            throw new ArgumentException("The number of x-values must be equal to the number of y-values.");
+        }
+
+        List<double> sortedXValues = new List<double>(xValues);
+        List<double> sortedYValues = new List<double>(yValues);
+        sortedXValues.Sort();
+
+        return x =>
+        {
+            if (x < sortedXValues[0])
+            {
+                return Extrapolate(x, sortedXValues[0], sortedXValues[1], sortedYValues[0], sortedYValues[1]);
+            }
+            else if (x > sortedXValues[sortedXValues.Count - 1])
+            {
+                return Extrapolate(x, sortedXValues[sortedXValues.Count - 2], sortedXValues[sortedXValues.Count - 1],
+                    sortedYValues[sortedYValues.Count - 2], sortedYValues[sortedYValues.Count - 1]);
+            }
+            else
+            {
+                int index = sortedXValues.BinarySearch(x);
+                if (index < 0)
+                {
+                    index = ~index;
+                }
+                if (index == 0)
+                {
+                    return Extrapolate(x, sortedXValues[0], sortedXValues[1], sortedYValues[0], sortedYValues[1]);
+                }
+                else if (index == sortedXValues.Count)
+                {
+                    return Extrapolate(x, sortedXValues[sortedXValues.Count - 2], sortedXValues[sortedXValues.Count - 1],
+                        sortedYValues[sortedYValues.Count - 2], sortedYValues[sortedYValues.Count - 1]);
+                }
+                else
+                {
+                    return Interpolate(x, sortedXValues[index - 1], sortedXValues[index], sortedYValues[index - 1], sortedYValues[index]);
+                }
+            }
+        };
+    }
+
+    public static double Extrapolate(double x, double x0, double x1, double y0, double y1)
+    {
+        double slope = (y1 - y0) / (x1 - x0);
+        return y0 + slope * (x - x0);
+    }
+
+    public static double Interpolate(double x, double x0, double x1, double y0, double y1)
+    {
+        double t = (x - x0) / (x1 - x0);
+        return y0 + t * (y1 - y0);
+    }
+}
+
+public class GPSDataPoint
+{
+    public double Timestamp { get; set; }
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
 }

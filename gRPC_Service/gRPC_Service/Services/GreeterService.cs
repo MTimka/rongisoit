@@ -524,8 +524,8 @@ public class GreeterService : Greeter.GreeterBase
                             Timestamp = timestamp,
                         };
 
-                        // if (m_trainLocationsCache.ContainsKey(trainId))
-                        if (false)
+                        if (m_trainLocationsCache.ContainsKey(trainId))
+                        // if (false)
                         {
                             if (m_trainLocationsCache[trainId].Count > 4)
                             {
@@ -537,62 +537,56 @@ public class GreeterService : Greeter.GreeterBase
                             // if (false)
                             if (m_trainLocationsCache[trainId].Count > 3)
                             {
-                                // var tLocsMapped = m_trainLocationsCache[trainId]
-                                    // .Select(x => Tuple.Create(x.Latitude, x.Longitude, x.Timestamp)).ToList();
-
-                                // Get the time zone info for Estonia
-                                // TimeZoneInfo estoniaTimeZone =
-                                //     TimeZoneInfo.FindSystemTimeZoneById("E. Europe Standard Time");
-                                //
-                                // // Get the current date and time in the Estonian time zone
-                                // DateTimeOffset estoniaTime =
-                                //     TimeZoneInfo.ConvertTime(DateTimeOffset.Now, estoniaTimeZone);
-                                // estoniaTime.AddSeconds(10);
-                                //
-                                // // Convert DateTimeOffset to Unix timestamp
-                                // long ee_unixTimestamp = estoniaTime.ToUnixTimeMilliseconds();
-                                // double ee_timestamp = ee_unixTimestamp / 1000.0;
-
-                                var trainLocationsToPredictOn = new List<TrainLocation>();
-                                trainLocationsToPredictOn.AddRange(m_trainLocationsCache[trainId]);
-
-                                double timeToPredict = 30 * 1000;
-                                var (r_lat2, r_lon2) = predictor.PredictLocation(
-                                    m_trainLocationsCache[trainId], 
-                                    m_trainLocationsCache[trainId].Last().Timestamp + timeToPredict,
-                                    deep: false);
-                                var distanceToTravel = PointUtils.CalculateDistance(r_lat2, r_lon2, m_trainLocationsCache[trainId].Last().Latitude, m_trainLocationsCache[trainId].Last().Longitude);
-                                double totalDistanceTraveledInPrediction = 0;
-
-                                double timestampStep = 1000.0;
-                                double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + timestampStep;
-                                double end_timestamp = ee_timestamp + timeToPredict;
-                                for (; ee_timestamp < end_timestamp; ee_timestamp += timestampStep)
+                                for (double milliseconds = 0; milliseconds < 30000; milliseconds += 2000)
                                 {
-                                    // var (r_lat, r_lon) = SimplePredictor.PredictLocation(m_trainLocationsCache[trainId], Convert.ToInt64(ee_timestamp));
-                                    var (r_lat, r_lon) = predictor.PredictLocation(trainLocationsToPredictOn, ee_timestamp);
-                                    
+                                    var (r_lat, r_lon) = predictor.PredictLocation2(m_trainLocationsCache[trainId], milliseconds);
                                     tLoc.Predictions.Add(new PLatLng
                                     {
                                         Latitude = r_lat,
                                         Longitude = r_lon,
                                     });
-                                    
-                                    //  check  if prediction can travel that far
-                                    var distancePredicted = PointUtils.CalculateDistance(r_lat, r_lon, trainLocationsToPredictOn.Last().Latitude, trainLocationsToPredictOn.Last().Longitude);
-                                    totalDistanceTraveledInPrediction += distancePredicted;
-                                    if (totalDistanceTraveledInPrediction > distanceToTravel)
-                                    {
-                                        break;
-                                    }
-                                    
-                                    trainLocationsToPredictOn.Add(new TrainLocation
-                                    {
-                                        Latitude = r_lat,
-                                        Longitude = r_lon,
-                                        Timestamp = ee_timestamp
-                                    });
                                 }
+
+                                // var trainLocationsToPredictOn = new List<TrainLocation>();
+                                // trainLocationsToPredictOn.AddRange(m_trainLocationsCache[trainId]);
+                                //
+                                // double timeToPredict = 30 * 1000;
+                                // var (r_lat2, r_lon2) = predictor.PredictLocation(
+                                //     m_trainLocationsCache[trainId], 
+                                //     m_trainLocationsCache[trainId].Last().Timestamp + timeToPredict,
+                                //     deep: false);
+                                // var distanceToTravel = PointUtils.CalculateDistance(r_lat2, r_lon2, m_trainLocationsCache[trainId].Last().Latitude, m_trainLocationsCache[trainId].Last().Longitude);
+                                // double totalDistanceTraveledInPrediction = 0;
+                                //
+                                // double timestampStep = 1000.0;
+                                // double ee_timestamp = m_trainLocationsCache[trainId].Last().Timestamp + timestampStep;
+                                // double end_timestamp = ee_timestamp + timeToPredict;
+                                // for (; ee_timestamp < end_timestamp; ee_timestamp += timestampStep)
+                                // {
+                                //     // var (r_lat, r_lon) = SimplePredictor.PredictLocation(m_trainLocationsCache[trainId], Convert.ToInt64(ee_timestamp));
+                                //     var (r_lat, r_lon) = predictor.PredictLocation(trainLocationsToPredictOn, ee_timestamp);
+                                //     
+                                //     tLoc.Predictions.Add(new PLatLng
+                                //     {
+                                //         Latitude = r_lat,
+                                //         Longitude = r_lon,
+                                //     });
+                                //     
+                                //     //  check  if prediction can travel that far
+                                //     var distancePredicted = PointUtils.CalculateDistance(r_lat, r_lon, trainLocationsToPredictOn.Last().Latitude, trainLocationsToPredictOn.Last().Longitude);
+                                //     totalDistanceTraveledInPrediction += distancePredicted;
+                                //     if (totalDistanceTraveledInPrediction > distanceToTravel)
+                                //     {
+                                //         break;
+                                //     }
+                                //     
+                                //     trainLocationsToPredictOn.Add(new TrainLocation
+                                //     {
+                                //         Latitude = r_lat,
+                                //         Longitude = r_lon,
+                                //         Timestamp = ee_timestamp
+                                //     });
+                                // }
                             }
 
                             UpdateTrainLocationRaw(tLoc);

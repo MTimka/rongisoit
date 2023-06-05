@@ -88,8 +88,8 @@ public class LinearTest
         Console.WriteLine(" 1 " + predictedLocation["latitude"]);
         Console.WriteLine(" 1 " + predictedLocation["longitude"]);
     }
-    
-    
+
+
     static Tuple<double, double> PredictLocation(List<TrainLocation> data, double targetTimestamp)
     {
         // Extrapolate the location based on the rate of change between the last two known data points
