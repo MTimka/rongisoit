@@ -524,7 +524,8 @@ public class GreeterService : Greeter.GreeterBase
                             Timestamp = timestamp,
                         };
 
-                        if (m_trainLocationsCache.ContainsKey(trainId))
+                        // if (m_trainLocationsCache.ContainsKey(trainId))
+                        if (false)
                         {
                             if (m_trainLocationsCache[trainId].Count > 4)
                             {
