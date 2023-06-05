@@ -7,6 +7,8 @@ using System;
 
 public class TrainLocationPredictor
 {
+    public static bool g_bDebug = false;
+
     private List<List<Tuple<double, double>>> railways;
     private List<List<LatLng>> tracks;
     private List<Tuple<BoundingBox, List<LatLng>>> boxedTracks =  new List<Tuple<BoundingBox, List<LatLng>>>();
@@ -100,7 +102,8 @@ public class TrainLocationPredictor
 {
     if (bdict.Count == 0 || (double)bdict[^1]["timestamp_num"] < 30000)
     {
-        Console.WriteLine("Need more segment(s)");
+        if (g_bDebug) { Console.WriteLine("Need more segment(s)"); }
+        
         List<LatLng> nextTrack = null;
         int segmentDirection = 0;
         
@@ -131,9 +134,9 @@ public class TrainLocationPredictor
         
         if (nextTrack != null)
         {
-            Console.WriteLine("segment_direction: " + segmentDirection);
-            Console.WriteLine("next_track: " + nextTrack);
-            
+            if (g_bDebug) { Console.WriteLine("segment_direction: " + segmentDirection); }
+            if (g_bDebug) { Console.WriteLine("next_track: " + nextTrack); }
+
             // List<double> xValues = nextTrack.Select(node => node[1]).ToList();
             // List<double> yValues = nextTrack.Select(node => node[0]).ToList();
             // plt.Scatter(xValues, yValues, "black", "Next Track Nodes");
@@ -209,17 +212,18 @@ public class TrainLocationPredictor
         // var nearestNode = nearestSegment[distancesIndices[nearestSegmentIndex]];
         // var nextNode = nearestSegment[distancesIndices[nearestSegmentIndex] - 1];
 
-        Console.WriteLine($"nearestSegment {nearestSegment.First().Latitude} {nearestSegment.First().Longitude} ");
-        Console.WriteLine($"lastPoint {lastPoint.Latitude} {lastPoint.Longitude} ");
-        Console.WriteLine($"lastPoint {secondLastPoint.Latitude} {secondLastPoint.Longitude} ");
-
+        if (g_bDebug) { Console.WriteLine($"nearestSegment {nearestSegment.First().Latitude} {nearestSegment.First().Longitude} "); }
+        if (g_bDebug) { Console.WriteLine($"lastPoint {lastPoint.Latitude} {lastPoint.Longitude} "); }
+        if (g_bDebug) { Console.WriteLine($"lastPoint {secondLastPoint.Latitude} {secondLastPoint.Longitude} "); }
+        
         int segmentDirection = PointUtils.DetermineMovementDirection(nearestSegment, lastPoint, secondLastPoint);
-        Console.WriteLine($"segmentDirection {segmentDirection} ");
-
+        if (g_bDebug) { Console.WriteLine($"segmentDirection {segmentDirection} "); }
+        
         var trainSpeed = (lastPoint.Timestamp - secondLastPoint.Timestamp) /
                          PointUtils.CalculateDistance(lastPoint.Latitude, lastPoint.Longitude, secondLastPoint.Latitude,
                              secondLastPoint.Longitude);
-        Console.WriteLine($"trainSpeed {trainSpeed} ");
+        
+        if (g_bDebug) { Console.WriteLine($"trainSpeed {trainSpeed} "); }
 
         List<Dictionary<string, object>> bDict = new List<Dictionary<string, object>>();
         int ii = distancesIndices[nearestSegmentIndex];
@@ -249,7 +253,7 @@ public class TrainLocationPredictor
 
         foreach (var obj in bDict)
         {
-            Console.WriteLine($"obj {obj["latitude"]} {obj["longitude"]} {obj["timestamp_num"]} ");
+            if (g_bDebug) {  Console.WriteLine($"obj {obj["latitude"]} {obj["longitude"]} {obj["timestamp_num"]} "); }
         }
         
         // List<double> timestampNums = bDict.Select(entry => (double)entry["timestamp_num"]).ToList();
@@ -267,7 +271,7 @@ public class TrainLocationPredictor
         }).ToList();
 
         List<double> futurePosition = PointUtils.InterpolateGPSData(interPoleData, millisecondsToPredict);
-        Console.WriteLine($"Future position: Latitude = {futurePosition[0]}, Longitude = {futurePosition[1]}");
+        if (g_bDebug) { Console.WriteLine($"Future position: Latitude = {futurePosition[0]}, Longitude = {futurePosition[1]}"); }
 
         return Tuple.Create(futurePosition[0], futurePosition[1]);
     }
@@ -405,12 +409,8 @@ public class TrainLocationPredictor
         };
 
         TrainLocationPredictor predictor = new TrainLocationPredictor();
-        Task.Run(() =>
-        {
-            Thread.Sleep(2000);
-            predictor.PredictLocation2(locations, 30000);
-        });
-
+        TrainLocationPredictor.g_bDebug = true;
+        predictor.PredictLocation2(locations, 30000);
     }
     
 }
