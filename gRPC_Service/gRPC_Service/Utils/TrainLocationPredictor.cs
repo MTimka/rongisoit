@@ -205,8 +205,9 @@ public class TrainLocationPredictor
 
         int nearestSegmentIndex = distances.IndexOf(distances.Min());
         var nearestSegment = tracks[nearestSegmentIndex];
-        var nearestNode = nearestSegment[distancesIndices[nearestSegmentIndex]];
-        var nextNode = nearestSegment[distancesIndices[nearestSegmentIndex] - 1];
+        // unused from python forumla
+        // var nearestNode = nearestSegment[distancesIndices[nearestSegmentIndex]];
+        // var nextNode = nearestSegment[distancesIndices[nearestSegmentIndex] - 1];
 
         Console.WriteLine($"nearestSegment {nearestSegment.First().Latitude} {nearestSegment.First().Longitude} ");
         Console.WriteLine($"lastPoint {lastPoint.Latitude} {lastPoint.Longitude} ");
