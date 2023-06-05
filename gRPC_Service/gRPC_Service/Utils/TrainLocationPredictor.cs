@@ -144,15 +144,7 @@ public class TrainLocationPredictor
             int i = segmentDirection == 1 ? 0 : nextTrack.Count - 1;
             while (i >= 0 && i < nextTrack.Count)
             {
-                double dist;
-                if (bdict.Count == 0)
-                {
-                    dist = PointUtils.CalculateDistance(nextTrack[i].Latitude, nextTrack[i].Longitude, lastPoint.Latitude, lastPoint.Longitude);
-                }
-                else
-                {
-                    dist = PointUtils.CalculateDistance(nextTrack[i].Latitude, nextTrack[i].Longitude, (double)bdict[^1]["latitude"], (double)bdict[^1]["longitude"]);
-                }
+                double dist = PointUtils.CalculateDistance(nextTrack[i].Latitude, nextTrack[i].Longitude, (double)bdict[^1]["latitude"], (double)bdict[^1]["longitude"]);
                 
                 bdict.Add(new Dictionary<string, object>
                 {
@@ -208,8 +200,8 @@ public class TrainLocationPredictor
 
         int nearestSegmentIndex = distances.IndexOf(distances.Min());
         var nearestSegment = tracks[nearestSegmentIndex];
-        // unused from python forumla
-        // var nearestNode = nearestSegment[distancesIndices[nearestSegmentIndex]];
+        var nearestNode = nearestSegment[distancesIndices[nearestSegmentIndex]];
+        // unused from python formula
         // var nextNode = nearestSegment[distancesIndices[nearestSegmentIndex] - 1];
 
         if (g_bDebug) { Console.WriteLine($"nearestSegment {nearestSegment.First().Latitude} {nearestSegment.First().Longitude} "); }
@@ -226,18 +218,35 @@ public class TrainLocationPredictor
         if (g_bDebug) { Console.WriteLine($"trainSpeed {trainSpeed} "); }
 
         List<Dictionary<string, object>> bDict = new List<Dictionary<string, object>>();
+        
+        // add current pos as start
+        bDict.Add(new Dictionary<string, object>()
+        {
+            { "latitude", lastPoint.Latitude },
+            { "longitude", lastPoint.Longitude },
+            { "timestamp_num", 0.0 }
+        });
+        
         int ii = distancesIndices[nearestSegmentIndex];
+        
+        // check if we need to include nearest segmennt nearest node
+        var nearestNodeDist = PointUtils.CalculateDistance(lastPoint.Latitude, lastPoint.Longitude,
+            nearestNode.Latitude, nearestNode.Longitude);
+        var nearestNodeDist2 = PointUtils.CalculateDistance(secondLastPoint.Latitude, secondLastPoint.Longitude,
+            nearestNode.Latitude, nearestNode.Longitude);
+
+        if (g_bDebug) { Console.WriteLine($"nearestNodeDist {nearestNodeDist} nearestNodeDist2 {nearestNodeDist2} "); }
+        if (nearestNodeDist > nearestNodeDist2)
+        {
+            // skip first(nearest) node
+            if (g_bDebug) { Console.WriteLine($"skip first(nearest) node "); }
+
+            ii += segmentDirection;
+        }
+        
         while (ii >= 0 && ii < nearestSegment.Count)
         {
-            double dist;
-            if (bDict.Count == 0)
-            {
-                dist = PointUtils.CalculateDistance(nearestSegment[ii].Latitude, nearestSegment[ii].Longitude, lastPoint.Latitude, lastPoint.Longitude);
-            }
-            else
-            {
-                dist = PointUtils.CalculateDistance(nearestSegment[ii].Latitude, nearestSegment[ii].Longitude, (double)bDict[^1]["latitude"], (double)bDict[^1]["longitude"]);
-            }
+            double dist = PointUtils.CalculateDistance(nearestSegment[ii].Latitude, nearestSegment[ii].Longitude, (double)bDict[^1]["latitude"], (double)bDict[^1]["longitude"]);
 
             bDict.Add(new Dictionary<string, object>()
             {
@@ -383,28 +392,53 @@ public class TrainLocationPredictor
 
     public static void Test1()
     {
+        // var locations = new List<TrainLocation>()
+        // {
+        //     new TrainLocation
+        //     {
+        //         TrainId = "63",
+        //         Latitude = 59.291303,
+        //         Longitude = 25.534314,
+        //         Timestamp = DateTimeOffset.ParseExact("2023-06-04 20:42:53", "yyyy-MM-dd' 'HH:mm:ss", CultureInfo.InvariantCulture).ToUnixTimeMilliseconds()
+        //     },
+        //     new TrainLocation
+        //     {
+        //         TrainId = "63",
+        //         Latitude = 59.291348,
+        //         Longitude = 25.533150,
+        //         Timestamp = DateTimeOffset.ParseExact("2023-06-04 20:42:55", "yyyy-MM-dd' 'HH:mm:ss", CultureInfo.InvariantCulture).ToUnixTimeMilliseconds()
+        //     },
+        //     new TrainLocation
+        //     {
+        //         TrainId = "63",
+        //         Latitude = 59.291393,
+        //         Longitude = 25.531987,
+        //         Timestamp = DateTimeOffset.ParseExact("2023-06-04 20:42:57", "yyyy-MM-dd' 'HH:mm:ss", CultureInfo.InvariantCulture).ToUnixTimeMilliseconds()
+        //     },
+        // };
+        
         var locations = new List<TrainLocation>()
         {
             new TrainLocation
             {
-                TrainId = "63",
-                Latitude = 59.291303,
-                Longitude = 25.534314,
-                Timestamp = DateTimeOffset.ParseExact("2023-06-04 20:42:53", "yyyy-MM-dd' 'HH:mm:ss", CultureInfo.InvariantCulture).ToUnixTimeMilliseconds()
+                TrainId = "377",
+                Latitude = 58.811510,
+                Longitude = 25.356979,
+                Timestamp = DateTimeOffset.ParseExact("2023-06-04 23:56:27", "yyyy-MM-dd' 'HH:mm:ss", CultureInfo.InvariantCulture).ToUnixTimeMilliseconds()
             },
             new TrainLocation
             {
-                TrainId = "63",
-                Latitude = 59.291348,
-                Longitude = 25.533150,
-                Timestamp = DateTimeOffset.ParseExact("2023-06-04 20:42:55", "yyyy-MM-dd' 'HH:mm:ss", CultureInfo.InvariantCulture).ToUnixTimeMilliseconds()
+                TrainId = "377",
+                Latitude = 58.811397,
+                Longitude = 25.357914,
+                Timestamp = DateTimeOffset.ParseExact("2023-06-04 23:56:29", "yyyy-MM-dd' 'HH:mm:ss", CultureInfo.InvariantCulture).ToUnixTimeMilliseconds()
             },
             new TrainLocation
             {
-                TrainId = "63",
-                Latitude = 59.291393,
-                Longitude = 25.531987,
-                Timestamp = DateTimeOffset.ParseExact("2023-06-04 20:42:57", "yyyy-MM-dd' 'HH:mm:ss", CultureInfo.InvariantCulture).ToUnixTimeMilliseconds()
+                TrainId = "377",
+                Latitude = 58.811283,
+                Longitude = 25.358847,
+                Timestamp = DateTimeOffset.ParseExact("2023-06-04 23:56:31", "yyyy-MM-dd' 'HH:mm:ss", CultureInfo.InvariantCulture).ToUnixTimeMilliseconds()
             },
         };
 
