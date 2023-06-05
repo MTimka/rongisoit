@@ -103,7 +103,7 @@ public class PointUtils
             var nextNode = trackNodes[nextIndex];
             double trackBearing = GetBearing(trackNodes[lastIndex].Latitude, trackNodes[lastIndex].Longitude, nextNode.Latitude, nextNode.Longitude);
 
-            Console.WriteLine("track_bearing next: " + trackBearing + ", train_bearing: " + trainBearing);
+            if (g_bDebug) { Console.WriteLine("track_bearing next: " + trackBearing + ", train_bearing: " + trainBearing); }
 
             if (Math.Abs(trackBearing - trainBearing) > 90)
             {
@@ -120,7 +120,7 @@ public class PointUtils
             var previousNode = trackNodes[previousIndex];
             double trackBearing = GetBearing(trackNodes[lastIndex].Latitude, trackNodes[lastIndex].Longitude, previousNode.Latitude, previousNode.Longitude);
 
-            Console.WriteLine("track_bearing previous: " + trackBearing + ", train_bearing: " + trainBearing);
+            if (g_bDebug) { Console.WriteLine("track_bearing previous: " + trackBearing + ", train_bearing: " + trainBearing); }
 
             if (Math.Abs(trackBearing - trainBearing) > 90)
             {

@@ -410,6 +410,7 @@ public class TrainLocationPredictor
 
         TrainLocationPredictor predictor = new TrainLocationPredictor();
         TrainLocationPredictor.g_bDebug = true;
+        PointUtils.g_bDebug = true;
         predictor.PredictLocation2(locations, 30000);
     }
     

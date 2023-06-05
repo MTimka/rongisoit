@@ -463,7 +463,7 @@ public class GreeterService : Greeter.GreeterBase
 
         var predictor = new TrainLocationPredictor();
         TrainLocationPredictor.g_bDebug = false;
-        // PointUtils.g_bDebug = true;
+        PointUtils.g_bDebug = false;
 
         var interval = TimeSpan.FromMilliseconds(2000);
         while (true)
