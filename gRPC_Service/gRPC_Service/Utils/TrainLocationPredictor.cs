@@ -8,6 +8,7 @@ using System;
 public class TrainLocationPredictor
 {
     public static bool g_bDebug = false;
+    public static int g_iMaxRecursiveSegments = 5;
 
     private List<List<Tuple<double, double>>> railways;
     private List<List<LatLng>> tracks;
@@ -98,9 +99,9 @@ public class TrainLocationPredictor
         
     }
 
-    public List<Dictionary<string, object>> RecursiveSegmentFinder(List<Dictionary<string, object>> bdict, double trainSpeed, TrainLocation lastPoint, TrainLocation secondLastPoint)
+    public List<Dictionary<string, object>> RecursiveSegmentFinder(List<Dictionary<string, object>> bdict, double trainSpeed, TrainLocation lastPoint, TrainLocation secondLastPoint, double milliseconds)
 {
-    if (bdict.Count == 0 || (double)bdict[^1]["timestamp_num"] < 30000)
+    if (bdict.Count == 0 || (double)bdict[^1]["timestamp_num"] < milliseconds)
     {
         if (g_bDebug) { Console.WriteLine("Need more segment(s)"); }
         
@@ -156,13 +157,17 @@ public class TrainLocationPredictor
                 i += segmentDirection;
             }
         }
+        else
+        {
+            return bdict;
+        }
     }
     else
     {
         return bdict;
     }
     
-    return RecursiveSegmentFinder(bdict, trainSpeed, lastPoint, secondLastPoint);
+    return RecursiveSegmentFinder(bdict, trainSpeed, lastPoint, secondLastPoint, milliseconds);
 }
     
     public Tuple<double, double> PredictLocation2(List<TrainLocation> trainLocations, double millisecondsToPredict)
@@ -258,7 +263,7 @@ public class TrainLocationPredictor
             ii += segmentDirection;
         }
 
-        bDict = RecursiveSegmentFinder(bDict, trainSpeed, lastPoint, secondLastPoint);
+        bDict = RecursiveSegmentFinder(bDict, trainSpeed, lastPoint, secondLastPoint, millisecondsToPredict);
 
         foreach (var obj in bDict)
         {
