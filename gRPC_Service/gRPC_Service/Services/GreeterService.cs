@@ -474,6 +474,7 @@ public class GreeterService : Greeter.GreeterBase
                 // var response = await client.GetAsync("https://backend-omega-seven.vercel.app/api/getjoke");
                 var response = await client.GetAsync("http://api1.elron.ee/index.php/aktiivsedreisid");
                 var content = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("got elron data");
 
                 var isValidJson = IsValidJson(content);
                 if (isValidJson)
