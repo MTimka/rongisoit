@@ -544,8 +544,12 @@ public class GreeterService : Greeter.GreeterBase
                                 {
                                     var (r_lat, r_lon, res) = predictor.PredictLocation2(m_trainLocationsCache[trainId], milliseconds);
                                     
-                                    // something failed
-                                    if (res == false)
+                                    // check  distance if  its  unreal
+                                    var distCheck = PointUtils.CalculateDistance(m_trainLocationsCache[trainId].Last().Latitude,
+                                        m_trainLocationsCache[trainId].Last().Longitude, r_lat, r_lon);
+
+                                    // distCheck is over 20km something failed
+                                    if (distCheck > 20.0 || res == false)
                                     {
                                         break;
                                     }
