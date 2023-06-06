@@ -163,6 +163,7 @@ public class TrainLocationPredictor
                     // we  dont have to add exact positions
                     if (dist < 0.0001)
                     {
+                        i += segmentDirection;
                         continue;
                     }
 
