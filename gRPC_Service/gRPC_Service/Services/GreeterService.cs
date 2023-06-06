@@ -542,7 +542,14 @@ public class GreeterService : Greeter.GreeterBase
                             {
                                 for (double milliseconds = 0; milliseconds < 30000; milliseconds += 3000)
                                 {
-                                    var (r_lat, r_lon) = predictor.PredictLocation2(m_trainLocationsCache[trainId], milliseconds);
+                                    var (r_lat, r_lon, res) = predictor.PredictLocation2(m_trainLocationsCache[trainId], milliseconds);
+                                    
+                                    // something failed
+                                    if (res == false)
+                                    {
+                                        break;
+                                    }
+                                    
                                     tLoc.Predictions.Add(new PLatLng
                                     {
                                         Latitude = r_lat,

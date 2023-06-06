@@ -71,7 +71,7 @@ public class TrainLocationPredictor
         
         Console.WriteLine("build quadtree ");
 
-        double sizeInGps = 0.01;
+        double sizeInGps = 0.02;
         foreach (var track in tracks)
         {
             // get bounding box
@@ -170,7 +170,7 @@ public class TrainLocationPredictor
     return RecursiveSegmentFinder(bdict, trainSpeed, lastPoint, secondLastPoint, milliseconds);
 }
     
-    public Tuple<double, double> PredictLocation2(List<TrainLocation> trainLocations, double millisecondsToPredict)
+    public Tuple<double, double, bool> PredictLocation2(List<TrainLocation> trainLocations, double millisecondsToPredict)
     {
         // Find the nearest track node to the predicted future position
         var lastPoint = trainLocations.Last();
@@ -201,7 +201,11 @@ public class TrainLocationPredictor
                 tracks.Add(trackSegment);
             }
         }
-        
+
+        if (distances.Count == 0)
+        {
+            return Tuple.Create(0.0, 0.0, false);
+        }
 
         int nearestSegmentIndex = distances.IndexOf(distances.Min());
         var nearestSegment = tracks[nearestSegmentIndex];
@@ -280,7 +284,7 @@ public class TrainLocationPredictor
         List<double> futurePosition = PointUtils.InterpolateGPSData(interPoleData, millisecondsToPredict);
         if (g_bDebug) { Console.WriteLine($"Future position: Latitude = {futurePosition[0]}, Longitude = {futurePosition[1]}"); }
 
-        return Tuple.Create(futurePosition[0], futurePosition[1]);
+        return Tuple.Create(futurePosition[0], futurePosition[1], true);
     }
 
 
