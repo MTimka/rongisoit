@@ -316,10 +316,20 @@ public class TrainLocationPredictor
             Timestamp = (double)entry["timestamp_num"]
         }).ToList();
 
-        List<double> futurePosition = PointUtils.InterpolateGPSData(interPoleData, millisecondsToPredict);
-        if (g_bDebug) { Console.WriteLine($"Future position: Latitude = {futurePosition[0]}, Longitude = {futurePosition[1]}"); }
+        try
+        {
+            List<double> futurePosition = PointUtils.InterpolateGPSData(interPoleData, millisecondsToPredict);
+            if (g_bDebug)
+            {
+                Console.WriteLine($"Future position: Latitude = {futurePosition[0]}, Longitude = {futurePosition[1]}");
+            }
 
-        return Tuple.Create(futurePosition[0], futurePosition[1], true);
+            return Tuple.Create(futurePosition[0], futurePosition[1], true);
+        }
+        catch (Exception ex)
+        {
+            return Tuple.Create(0.0, 0.0, false);
+        }
     }
 
 
