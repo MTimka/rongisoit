@@ -56,13 +56,18 @@ public class TrainLocationPredictor
         Console.WriteLine("railways len " + railways.Count);
         
         tracks = new List<List<LatLng>>();
+        UInt64 trackId = 0;
 
         foreach (List<Tuple<double, double>> track in railways)
         {
+            trackId += 1;
             var res = new List<LatLng>();
             foreach (Tuple<double, double> point in track)
             {
-                var pointDict = new LatLng(point.Item1, point.Item2);
+                var pointDict = new LatLng(point.Item1, point.Item2)
+                {
+                    Id = trackId
+                };
                 res.Add(pointDict);
             }
             
@@ -99,76 +104,103 @@ public class TrainLocationPredictor
         
     }
 
-    public List<Dictionary<string, object>> RecursiveSegmentFinder(List<Dictionary<string, object>> bdict, double trainSpeed, TrainLocation lastPoint, TrainLocation secondLastPoint, double milliseconds)
-{
-    if (bdict.Count == 0 || (double)bdict[^1]["timestamp_num"] < milliseconds)
+    public List<Dictionary<string, object>> RecursiveSegmentFinder(List<Dictionary<string, object>> bdict, double trainSpeed, TrainLocation lastPoint, TrainLocation secondLastPoint, double milliseconds, List<UInt64>  ignoreTrackIds)
     {
-        if (g_bDebug) { Console.WriteLine("Need more segment(s)"); }
-        
-        List<LatLng> nextTrack = null;
-        int segmentDirection = 0;
-        
-        // Find connecting segments
-        foreach (var boxedTrack in boxedTracks)
+        double lastTrackBearing = 0;
+        bool setLastTrackBearing = false;
+        if (bdict.Count >= 2)
         {
-            if (boxedTrack.Item1.Intersects(secondLastPoint.Latitude, secondLastPoint.Longitude,
-                    lastPoint.Latitude, lastPoint.Longitude))
-            {
-                var trackSegment = boxedTrack.Item2;
-                
-                if (Math.Abs(trackSegment[0].Latitude - (double)bdict[^1]["latitude"]) < 0.00001 &&
-                    Math.Abs(trackSegment[0].Longitude - (double)bdict[^1]["longitude"]) < 0.00001)
-                {
-                    segmentDirection = 1;
-                    nextTrack = trackSegment;
-                    break;
-                }
-                else if (Math.Abs(trackSegment[^1].Latitude - (double)bdict[^1]["latitude"]) < 0.00001 &&
-                         Math.Abs(trackSegment[^1].Longitude - (double)bdict[^1]["longitude"]) < 0.00001)
-                {
-                    segmentDirection = -1;
-                    nextTrack = trackSegment;
-                    break;
-                }
-            }
+            lastTrackBearing = PointUtils.GetBearing((double)bdict[^2]["latitude"], (double)bdict[^2]["longitude"], (double)bdict[^1]["latitude"], (double)bdict[^1]["longitude"]);
+            setLastTrackBearing = true;
         }
         
-        if (nextTrack != null)
+        if (bdict.Count == 0 || (double)bdict[^1]["timestamp_num"] < milliseconds)
         {
-            if (g_bDebug) { Console.WriteLine("segment_direction: " + segmentDirection); }
-            if (g_bDebug) { Console.WriteLine("next_track: " + nextTrack); }
-
-            // List<double> xValues = nextTrack.Select(node => node[1]).ToList();
-            // List<double> yValues = nextTrack.Select(node => node[0]).ToList();
-            // plt.Scatter(xValues, yValues, "black", "Next Track Nodes");
+            if (g_bDebug) { Console.WriteLine("Need more segment(s)"); }
             
-            int i = segmentDirection == 1 ? 0 : nextTrack.Count - 1;
-            while (i >= 0 && i < nextTrack.Count)
+            List<LatLng> nextTrack = null;
+            int segmentDirection = 0;
+            
+            // Find connecting segments
+            foreach (var boxedTrack in boxedTracks)
             {
-                double dist = PointUtils.CalculateDistance(nextTrack[i].Latitude, nextTrack[i].Longitude, (double)bdict[^1]["latitude"], (double)bdict[^1]["longitude"]);
-                
-                bdict.Add(new Dictionary<string, object>
+                if (boxedTrack.Item1.Intersects(secondLastPoint.Latitude, secondLastPoint.Longitude,
+                        lastPoint.Latitude, lastPoint.Longitude))
                 {
-                    { "latitude", nextTrack[i].Latitude },
-                    { "longitude", nextTrack[i].Longitude },
-                    { "timestamp_num", ((bdict.Count > 0) ? (double)bdict[^1]["timestamp_num"] : 0) + dist * trainSpeed }
-                });
+                    var trackSegment = boxedTrack.Item2;
+                    
+                    if (Math.Abs(trackSegment[0].Latitude - (double)bdict[^1]["latitude"]) < 0.00001 &&
+                        Math.Abs(trackSegment[0].Longitude - (double)bdict[^1]["longitude"]) < 0.00001 &&
+                        (UInt64)bdict[^1]["trackId"] != trackSegment[0].Id &&
+                        ignoreTrackIds.Contains(trackSegment[0].Id) == false)
+                    {
+                        segmentDirection = 1;
+                        nextTrack = trackSegment;
+                        break;
+                    }
+                    else if (Math.Abs(trackSegment[^1].Latitude - (double)bdict[^1]["latitude"]) < 0.00001 &&
+                             Math.Abs(trackSegment[^1].Longitude - (double)bdict[^1]["longitude"]) < 0.00001 &&
+                             (UInt64)bdict[^1]["trackId"] != trackSegment[^1].Id &&
+                             ignoreTrackIds.Contains(trackSegment[^1].Id) == false)
+                    {
+                        segmentDirection = -1;
+                        nextTrack = trackSegment;
+                        break;
+                    }
+                }
+            }
+            
+            if (nextTrack != null)
+            {
+                if (g_bDebug) { Console.WriteLine("segment_direction: " + segmentDirection); }
+                if (g_bDebug) { Console.WriteLine("next_track: " + nextTrack); }
                 
-                i += segmentDirection;
+                int i = segmentDirection == 1 ? 0 : nextTrack.Count - 1;
+                while (i >= 0 && i < nextTrack.Count)
+                {
+                    double dist = PointUtils.CalculateDistance(nextTrack[i].Latitude, nextTrack[i].Longitude, (double)bdict[^1]["latitude"], (double)bdict[^1]["longitude"]);
+
+                    // we  dont have to add exact positions
+                    if (dist < 0.0001)
+                    {
+                        continue;
+                    }
+
+                    if (setLastTrackBearing == true)
+                    {
+                        var nextTrackBearing = PointUtils.GetBearing((double)bdict[^1]["latitude"], (double)bdict[^1]["longitude"], nextTrack[i].Latitude, nextTrack[i].Longitude);
+                        if (Math.Abs(lastTrackBearing - nextTrackBearing) > 90 &&
+                            Math.Abs(lastTrackBearing - nextTrackBearing) < 270)
+                        {
+                            ignoreTrackIds.Add(nextTrack[i].Id);
+                            return RecursiveSegmentFinder(bdict, trainSpeed, lastPoint, secondLastPoint, milliseconds, ignoreTrackIds);
+                        }
+                    }
+                    
+                    
+                    bdict.Add(new Dictionary<string, object>
+                    {
+                        { "latitude", nextTrack[i].Latitude },
+                        { "longitude", nextTrack[i].Longitude },
+                        { "timestamp_num", ((bdict.Count > 0) ? (double)bdict[^1]["timestamp_num"] : 0) + dist * trainSpeed },
+                        { "trackId", nextTrack[i].Id },
+                    });
+                    
+                    i += segmentDirection;
+                }
+            }
+            else
+            {
+                return bdict;
             }
         }
         else
         {
             return bdict;
         }
+        
+        return RecursiveSegmentFinder(bdict, trainSpeed, lastPoint, secondLastPoint, milliseconds, ignoreTrackIds);
     }
-    else
-    {
-        return bdict;
-    }
-    
-    return RecursiveSegmentFinder(bdict, trainSpeed, lastPoint, secondLastPoint, milliseconds);
-}
     
     public Tuple<double, double, bool> PredictLocation2(List<TrainLocation> trainLocations, double millisecondsToPredict)
     {
@@ -233,7 +265,8 @@ public class TrainLocationPredictor
         {
             { "latitude", lastPoint.Latitude },
             { "longitude", lastPoint.Longitude },
-            { "timestamp_num", 0.0 }
+            { "timestamp_num", 0.0 },
+            { "trackId", (UInt64)0 },
         });
         
         int ii = distancesIndices[nearestSegmentIndex];
@@ -261,13 +294,14 @@ public class TrainLocationPredictor
             {
                 { "latitude", nearestSegment[ii].Latitude },
                 { "longitude", nearestSegment[ii].Longitude },
-                { "timestamp_num", ((bDict.Count > 0) ? (double)bDict[^1]["timestamp_num"] : 0) + dist * trainSpeed }
+                { "timestamp_num", ((bDict.Count > 0) ? (double)bDict[^1]["timestamp_num"] : 0) + dist * trainSpeed },
+                { "trackId", nearestSegment[ii].Id },
             });
 
             ii += segmentDirection;
         }
 
-        bDict = RecursiveSegmentFinder(bDict, trainSpeed, lastPoint, secondLastPoint, millisecondsToPredict);
+        bDict = RecursiveSegmentFinder(bDict, trainSpeed, lastPoint, secondLastPoint, millisecondsToPredict, new List<UInt64>());
 
         foreach (var obj in bDict)
         {

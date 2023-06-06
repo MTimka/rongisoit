@@ -105,7 +105,7 @@ public class PointUtils
 
             if (g_bDebug) { Console.WriteLine("track_bearing next: " + trackBearing + ", train_bearing: " + trainBearing); }
 
-            if (Math.Abs(trackBearing - trainBearing) > 90)
+            if (Math.Abs(trackBearing - trainBearing) > 90 && Math.Abs(trackBearing - trainBearing) < 270)
             {
                 return -1; // Backward (-1)
             }
@@ -122,7 +122,7 @@ public class PointUtils
 
             if (g_bDebug) { Console.WriteLine("track_bearing previous: " + trackBearing + ", train_bearing: " + trainBearing); }
 
-            if (Math.Abs(trackBearing - trainBearing) > 90)
+            if (Math.Abs(trackBearing - trainBearing) > 90 && Math.Abs(trackBearing - trainBearing) < 270)
             {
                 return 1; // Forward (+1)
             }

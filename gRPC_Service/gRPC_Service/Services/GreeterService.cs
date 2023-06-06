@@ -602,7 +602,7 @@ public class GreeterService : Greeter.GreeterBase
                                 //     });
                                 // }
                             }
-
+                            
                             UpdateTrainLocationRaw(tLoc);
 
                         }
