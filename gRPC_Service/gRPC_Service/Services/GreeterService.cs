@@ -480,6 +480,8 @@ public class GreeterService : Greeter.GreeterBase
                 {
                     // update train locations
                     var jsonArray = JArray.Parse(content);
+
+                    var timeCheck = DateTime.Now;
                     foreach (JObject jsonObject in jsonArray)
                     {
                         var trainId = (string)jsonObject["reis"];
@@ -538,7 +540,7 @@ public class GreeterService : Greeter.GreeterBase
                             // if (false)
                             if (m_trainLocationsCache[trainId].Count > 3)
                             {
-                                for (double milliseconds = 0; milliseconds < 30000; milliseconds += 2000)
+                                for (double milliseconds = 0; milliseconds < 30000; milliseconds += 3000)
                                 {
                                     var (r_lat, r_lon) = predictor.PredictLocation2(m_trainLocationsCache[trainId], milliseconds);
                                     tLoc.Predictions.Add(new PLatLng
@@ -599,6 +601,8 @@ public class GreeterService : Greeter.GreeterBase
                             UpdateTrainLocationRaw(tLoc);
                         }
                     }
+
+                    Console.WriteLine("time spent on prediction " + (DateTime.Now - timeCheck).Milliseconds + " ms");
                     
                     // tell users to update locations
                     foreach (var it in m_userEvents2)
