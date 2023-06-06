@@ -526,6 +526,7 @@ public class GreeterService : Greeter.GreeterBase
                             Latitude = latitude,
                             Longitude = longitude,
                             Timestamp = timestamp,
+                            Predictions = {  }
                         };
 
                         if (m_trainLocationsCache.ContainsKey(trainId))
