@@ -264,14 +264,7 @@ public class TrainLocationPredictor
         {
             if (g_bDebug) {  Console.WriteLine($"obj {obj["latitude"]} {obj["longitude"]} {obj["timestamp_num"]} "); }
         }
-        
-        // List<double> timestampNums = bDict.Select(entry => (double)entry["timestamp_num"]).ToList();
-        // List<List<double>> latitudesAndLongitudes = new List<List<double>>()
-        // {
-        //     bDict.Select(entry => (double)entry["latitude"]).ToList(),
-        //     bDict.Select(entry => (double)entry["longitude"]).ToList()
-        // };
-        
+
         var interPoleData = bDict.Select(entry => new GPSDataPoint()
         {
             Latitude = (double)entry["latitude"],
