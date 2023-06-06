@@ -431,7 +431,8 @@ public class GreeterService : Greeter.GreeterBase
                     {
                         await responseStream.WriteAsync(new DataResponse
                         {
-                            Json = m_userCache[request.Id][0]
+                            // Json = m_userCache[request.Id][0]
+                            Json = ""
                         });
                     }
                     catch (Exception ex)
@@ -439,7 +440,8 @@ public class GreeterService : Greeter.GreeterBase
                         break;
                     }
 
-                    m_userCache[request.Id].RemoveAt(0);
+                    // m_userCache[request.Id].RemoveAt(0);
+                    m_userCache[request.Id].Clear();
                 }
             }
         }
