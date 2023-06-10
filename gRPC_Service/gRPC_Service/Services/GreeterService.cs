@@ -12,7 +12,7 @@ public class GreeterService : Greeter.GreeterBase
 {
     private readonly ILogger<GreeterService> _logger;
 
-    private static double USER_FORWARD_SPEED_MULLER = 20;
+    private static double USER_FORWARD_SPEED_MULLER = 20000;
     private static double USER_BACKWARD_SPEED_MULLER = 10;
     private static double USER_SIDE_SPEED_MULLER = 10;
     
