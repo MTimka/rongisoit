@@ -76,6 +76,13 @@ public class GreeterService : Greeter.GreeterBase
             // }
             
             var lastLocation = new Utils.LatLng(request.Latitude, request.Longitude);
+            var polygon = new List<Utils.LatLng>()
+            {
+                new Utils.LatLng(m_userLocations[key].Forward.Latitude, m_userLocations[key].Forward.Longitude),
+                new Utils.LatLng(m_userLocations[key].Sp1.Latitude, m_userLocations[key].Sp1.Longitude),
+                new Utils.LatLng(m_userLocations[key].Backward.Latitude, m_userLocations[key].Backward.Longitude),
+                new Utils.LatLng(m_userLocations[key].Sp2.Latitude, m_userLocations[key].Sp2.Longitude),
+            };
             
             foreach (var prediction in request.Predictions)
             {
@@ -122,8 +129,10 @@ public class GreeterService : Greeter.GreeterBase
                     lastLocation,
                     currentLocation
                 );
+
+                var isPointInPolygon = LineIntersectionChecker.IsPointInPolygon(currentLocation, polygon);
                 
-                if (doesIntersect1 || doesIntersect2 || doesIntersectTopToLeft || doesIntersectLeftToBottom || doesIntersectBottomToRight || doesIntersectRightToTop)
+                if (doesIntersect1 || doesIntersect2 || doesIntersectTopToLeft || doesIntersectLeftToBottom || doesIntersectBottomToRight || doesIntersectRightToTop || isPointInPolygon)
                 {
                     m_userEvents1[key].Set();
                     break;

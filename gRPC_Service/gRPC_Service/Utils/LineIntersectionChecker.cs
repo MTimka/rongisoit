@@ -85,4 +85,27 @@ public class LineIntersectionChecker
             && pointY >= Math.Min(y1, y2) && pointY <= Math.Max(y1, y2));
     }
 
+    public static bool IsPointInPolygon(Utils.LatLng point, List<Utils.LatLng> polygon)
+    {
+        int intersectCount = 0;
+        for (int i = 0; i < polygon.Count; i++)
+        {
+            var p1 = polygon[i];
+            var p2 = polygon[(i + 1) % polygon.Count];
+
+            if (p1.Longitude < point.Longitude && p2.Longitude < point.Longitude)
+                continue;
+
+            if (point.Longitude >= Math.Max(p1.Longitude, p2.Longitude))
+                continue;
+
+            double xIntersection = (point.Longitude - p1.Longitude) * (p2.Latitude - p1.Latitude)
+                / (p2.Longitude - p1.Longitude) + p1.Latitude;
+
+            if (xIntersection < point.Latitude)
+                intersectCount++;
+        }
+
+        return intersectCount % 2 == 1;
+    }
 }
