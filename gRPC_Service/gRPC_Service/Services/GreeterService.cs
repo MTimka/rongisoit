@@ -12,7 +12,7 @@ public class GreeterService : Greeter.GreeterBase
 {
     private readonly ILogger<GreeterService> _logger;
 
-    private static double USER_FORWARD_SPEED_MULLER = 20;
+    private static double USER_FORWARD_SPEED_MULLER = 10;
     private static double USER_BACKWARD_SPEED_MULLER = 10;
     private static double USER_SIDE_SPEED_MULLER = 10;
     
@@ -206,9 +206,9 @@ public class GreeterService : Greeter.GreeterBase
     {
         Console.WriteLine($"UpdateUserLocation [] {request.Id} {request.Latitude} {request.Longitude}");
 
-        if (request.AvgSpeed < 0.002)
+        if (request.AvgSpeed < 0.0002)
         {
-            request.AvgSpeed = 0.002;
+            request.AvgSpeed = 0.0002;
         }
         
         var pointToForward = DestinationPointCalculator.CalculateDestinationPoint(
