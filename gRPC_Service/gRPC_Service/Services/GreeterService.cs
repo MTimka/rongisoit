@@ -30,6 +30,7 @@ public class GreeterService : Greeter.GreeterBase
     
     public static Dictionary<string, List<TrainLocation>> m_trainLocationsCache = new Dictionary<string, List<TrainLocation>>();
     
+    private static bool m_bRunTrainThread = false;
 
     public GreeterService(ILogger<GreeterService> logger)
     {
@@ -462,6 +463,38 @@ public class GreeterService : Greeter.GreeterBase
 
     }
     
+    public override Task<Response> IsTrainThreadActive(NoneRequest request, ServerCallContext context)
+    {
+        Console.WriteLine($"IsTrainThreadActive [] ");
+        
+        return Task.FromResult(new Response
+        {
+            Code = m_bRunTrainThread ? "True" : "False"
+        });
+    }
+    
+    public override Task<Response> ActivateTrainThread(NoneRequest request, ServerCallContext context)
+    {
+        Console.WriteLine($"ActivateTrainThread [] ");
+        m_bRunTrainThread = true;
+        
+        return Task.FromResult(new Response
+        {
+            Code = "OK"
+        });
+    }
+    
+    public override Task<Response> DeActivateTrainThread(NoneRequest request, ServerCallContext context)
+    {
+        Console.WriteLine($"DeActivateTrainThread [] ");
+        m_bRunTrainThread = false;
+
+        return Task.FromResult(new Response
+        {
+            Code = "OK"
+        });
+    }
+    
     
     
     //
@@ -479,7 +512,7 @@ public class GreeterService : Greeter.GreeterBase
         var interval = TimeSpan.FromMilliseconds(2000);
         while (true)
         {
-            if (m_userCache.Keys.Count > 0)
+            if (m_userCache.Keys.Count > 0 || m_bRunTrainThread)
             {
                 using var client = new HttpClient();
                 // var response = await client.GetAsync("https://backend-omega-seven.vercel.app/api/getjoke");

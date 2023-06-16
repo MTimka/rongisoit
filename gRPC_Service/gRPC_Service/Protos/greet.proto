@@ -20,10 +20,14 @@ service Greeter {
   rpc UpdateUserRotation(UserRotation) returns (Response);
   rpc SubscribeForTrainLocationUpdates(SubscribeRequest) returns (stream TrainLocationUpdatesResponse);
   rpc UpdateUserImpactRadius(UserImpactRadiusRequest) returns (Response);
-
+  rpc IsTrainThreadActive(NoneRequest) returns (Response);
 
   // for data collecting
   rpc SubscribeForDataCollector(SubscribeRequest) returns (stream DataResponse);
+  
+  // for server
+  rpc ActivateTrainThread(NoneRequest) returns (Response);
+  rpc DeActivateTrainThread(NoneRequest) returns (Response);
 
 }
 
@@ -35,6 +39,10 @@ message HelloRequest {
 // The response message containing the greetings.
 message HelloReply {
   string message = 1;
+}
+
+message  NoneRequest {
+  
 }
 
 message StartTimerRequest {
