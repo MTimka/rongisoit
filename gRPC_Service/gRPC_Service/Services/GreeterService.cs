@@ -12,9 +12,9 @@ public class GreeterService : Greeter.GreeterBase
 {
     private readonly ILogger<GreeterService> _logger;
 
-    private static double USER_FORWARD_SPEED_MULLER = 20000;
-    private static double USER_BACKWARD_SPEED_MULLER = 10000;
-    private static double USER_SIDE_SPEED_MULLER = 10000;
+    private static double USER_FORWARD_SPEED_MULLER = 20;
+    private static double USER_BACKWARD_SPEED_MULLER = 10;
+    private static double USER_SIDE_SPEED_MULLER = 10;
     
     public static Dictionary<string, UserLocationResponse> m_userLocations = new Dictionary<string, UserLocationResponse>();
     // public static Dictionary<string, double> m_userRotations = new Dictionary<string, double>();
