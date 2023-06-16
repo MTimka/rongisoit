@@ -131,9 +131,9 @@ public class GreeterService : Greeter.GreeterBase
                     currentLocation
                 );
 
-                var isPointInPolygon = LineIntersectionChecker.IsPointInPolygon(currentLocation, polygon);
+                // var isPointInPolygon = LineIntersectionChecker.IsPointInPolygon(currentLocation, polygon);
                 
-                if (doesIntersect1 || doesIntersect2 || doesIntersectTopToLeft || doesIntersectLeftToBottom || doesIntersectBottomToRight || doesIntersectRightToTop || isPointInPolygon)
+                if (doesIntersect1 || doesIntersect2 || doesIntersectTopToLeft || doesIntersectLeftToBottom || doesIntersectBottomToRight || doesIntersectRightToTop)
                 {
                     m_userEvents1[key].Set();
                     break;
