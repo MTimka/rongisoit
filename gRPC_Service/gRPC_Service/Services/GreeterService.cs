@@ -430,29 +430,28 @@ public class GreeterService : Greeter.GreeterBase
             if (context.CancellationToken.IsCancellationRequested)
             { break; }
 
-            Console.WriteLine($"SubscribeForTrainLocationUpdates [] {request.Id} send");
+            Console.WriteLine($"SubscribeForDataCollector [] {request.Id} send");
 
             // send user the json
             if (m_userCache.ContainsKey(request.Id))
             {
-                while (m_userCache[request.Id].Count > 0)
+                foreach (var json in m_userCache[request.Id])
                 {
                     try
                     {
                         await responseStream.WriteAsync(new DataResponse
                         {
-                            // Json = m_userCache[request.Id][0]
-                            Json = ""
+                            Json = json
+                            // Json = ""
                         });
                     }
                     catch (Exception ex)
                     {
                         break;
                     }
-
-                    // m_userCache[request.Id].RemoveAt(0);
-                    m_userCache[request.Id].Clear();
                 }
+
+                m_userCache[request.Id].Clear();
             }
         }
 
@@ -523,6 +522,8 @@ public class GreeterService : Greeter.GreeterBase
                 var isValidJson = IsValidJson(content);
                 if (isValidJson)
                 {
+
+                    /*
                     // update train locations
                     var jsonArray = JArray.Parse(content);
 
@@ -664,18 +665,18 @@ public class GreeterService : Greeter.GreeterBase
                     // tell users to update locations
                     foreach (var it in m_userEvents2)
                     { it.Value.Set(); }
-                
+                    */
+
                     // write to users cache
                     foreach (var key in m_userCache.Keys)
                     {
-                        if (m_userCache[key].Count > maxCacheSize)
-                        {
-                            m_userCache[key].RemoveAt(0);
-                        }
-                
+                        //if (m_userCache[key].Count > maxCacheSize)
+                        //{ m_userCache[key].RemoveAt(0); }
+                        
                         m_userCache[key].Add(content);
                     }
-            
+                    
+
                     // notify to stream
                     foreach (var key in m_userEvents3.Keys)
                     {

@@ -102,23 +102,23 @@ async void ListenServer() {
                     var reisi_staatus = (string)jsonObject["reisi_staatus"];
                     var viimane_peatus = (string)jsonObject["viimane_peatus"];
 
-                    // servElron.InsertServElron(
-                    //     reis: reis,
-                    //     liin: liin,
-                    //     reisiAlgusAeg: reisi_algus_aeg,
-                    //     reisiLoppAeg: reisi_lopp_aeg,
-                    //     kiirus: kiirus,
-                    //     latitude: latitude,
-                    //     longitude: longitude,
-                    //     rongiSuund: rongi_suund,
-                    //     erinevusPlaanist: erinevus_plaanist,
-                    //     lisateade: lisateade,
-                    //     pohjusTeade: pohjus_teade,
-                    //     avaldaKodulehel: avalda_kodulehel,
-                    //     asukohaUuendus: asukoha_uuendus,
-                    //     reisiStaatus: reisi_staatus,
-                    //     viimanePeatus: viimane_peatus
-                    // );
+                    servElron.InsertServElron(
+                        reis: reis,
+                        liin: liin,
+                        reisiAlgusAeg: reisi_algus_aeg,
+                        reisiLoppAeg: reisi_lopp_aeg,
+                        kiirus: kiirus,
+                        latitude: latitude,
+                        longitude: longitude,
+                        rongiSuund: rongi_suund,
+                        erinevusPlaanist: erinevus_plaanist,
+                        lisateade: lisateade,
+                        pohjusTeade: pohjus_teade,
+                        avaldaKodulehel: avalda_kodulehel,
+                        asukohaUuendus: asukoha_uuendus,
+                        reisiStaatus: reisi_staatus,
+                        viimanePeatus: viimane_peatus
+                    );
 
                 }
                 
